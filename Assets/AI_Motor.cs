@@ -3,15 +3,15 @@ using System.Collections;
 
 public class AI_Motor : MonoBehaviour 
 {
-    [SerializeField] private float a_MaxSpeed = 10f;    // Player max move speed on X axis.
-    [SerializeField] private LayerMask a_WhatIsGround;  // A mask determining what is ground to the character.
+    [SerializeField] private float m_MaxSpeed = 10f;    // Player max move speed on X axis.
+    [SerializeField] private LayerMask m_WhatIsGround;  // A mask determining what is ground to the character.
 
     private Transform GroundCheck;      // A position marking where to check if the player is grounded.
     const float GroundedRadius = .2f;   // Radius of the overlap circle to determine if grounded.
     private bool Grounded;              // Whether or not the player is grounded.
     private Transform CeilingCheck;     // A position marking where to check for ceilings.
     const float CeilingRadius = .01f;   // Radius of the overlap circle to determine if the player can stand up.
-    private Rigidbody2D a_Rigidbody2D;  // The Rigidbody2D component attached to the player GameObject.
+    private Rigidbody2D k_Rigidbody2D;  // The Rigidbody2D component attached to the player GameObject.
     bool FacingRight = true;            // For determining which way the player is curently facing.
 
     public float Damage = 10f;
@@ -23,14 +23,14 @@ public class AI_Motor : MonoBehaviour
         // Setting up references
         GroundCheck = transform.Find("GroundCheck");
         CeilingCheck = transform.Find("CeilingCheck");
-        a_Rigidbody2D = GetComponent<Rigidbody2D>();
+        k_Rigidbody2D = GetComponent<Rigidbody2D>();
 	}
 	
 	public void ImposedFixedUpdate() 
     {
         Grounded = false;
 
-        Collider2D[] colliders = Physics2D.OverlapCircleAll(GroundCheck.position, GroundedRadius, a_WhatIsGround);
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(GroundCheck.position, GroundedRadius, m_WhatIsGround);
         for (int i = 0; i < colliders.Length; i++)
         {
             if (colliders[i].gameObject != gameObject)
@@ -59,7 +59,7 @@ public class AI_Motor : MonoBehaviour
     {
         if (Grounded)
         {
-            a_Rigidbody2D.velocity = new Vector2(move * a_MaxSpeed, a_Rigidbody2D.velocity.y);
+            k_Rigidbody2D.velocity = new Vector2(move * m_MaxSpeed, k_Rigidbody2D.velocity.y);
         }
     }
 
