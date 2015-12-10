@@ -7,9 +7,9 @@ public class AI_Controller : MonoBehaviour
 
     public Transform Target;
     float Distance;
-    [SerializeField] float a_LookAtRange = 25f;
-    [SerializeField] float a_ChaseRange = 15f;
-    [SerializeField] float a_AttackRange = 1.5f;
+    [SerializeField] float m_LookAtRange = 25f;
+    [SerializeField] float m_ChaseRange = 15f;
+    [SerializeField] float m_AttackRange = 1.5f;
 
     private AI_Motor _Motor;
 
@@ -30,15 +30,15 @@ public class AI_Controller : MonoBehaviour
         
         float moveHorizontal = 0f;
 
-        if(Distance < a_LookAtRange)
+        if(Distance < m_LookAtRange)
         {
             _Motor.LookAt(Target.position);
         }
-        if(Distance < a_AttackRange)
+        if(Distance < m_AttackRange)
         {
             _Motor.Attack(Target);
         }
-        else if(Distance < a_ChaseRange)
+        else if(Distance < m_ChaseRange)
         {
             if (Target.position.x > transform.position.x)
                 moveHorizontal = 1f;
