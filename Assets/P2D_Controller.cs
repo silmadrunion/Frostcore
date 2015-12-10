@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-[RequireComponent(typeof (P2D_Motor))]
+[RequireComponent(typeof(P2D_Motor))]
 public class P2D_Controller : MonoBehaviour
 {
 
@@ -11,6 +11,7 @@ public class P2D_Controller : MonoBehaviour
 	void Awake() 
     {
         _Motor = GetComponent<P2D_Motor>();
+        _Motor.ImposedAwake();
 	}
 	
 	void Update() 
@@ -31,6 +32,7 @@ public class P2D_Controller : MonoBehaviour
         if(Input.GetAxis("Horizontal") > deadZone || Input.GetAxis("Horizontal") < -deadZone)
             moveHorizontal = Input.GetAxis("Horizontal");
 
+        _Motor.ImposedFixedUpdate();
         _Motor.Move(moveHorizontal, isJumping, crouch);
 
         isJumping = false;
