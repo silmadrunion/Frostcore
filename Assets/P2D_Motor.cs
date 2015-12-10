@@ -3,7 +3,7 @@ using System.Collections;
 
 public class P2D_Motor : MonoBehaviour 
 {
-    [SerializeField] private float p_MaxSpeed = 10f;                   // Player move speed on X axis.
+    [SerializeField] private float p_MaxSpeed = 10f;                    // Player max move speed on X axis.
     [SerializeField] private float p_JumpForce = 400f;                  // Amount of force added when the player jumps.
     [Range(0, 1)][SerializeField] private float p_CrouchSpeed = .36f;   // Amount of maxSpeed applied to crouching movement. 1 = 100%
     [SerializeField] private bool p_AirControl = false;                 // Whether or not a player can steer while jumping.
@@ -17,7 +17,7 @@ public class P2D_Motor : MonoBehaviour
     private Rigidbody2D p_Rigidbody2D;  // The Rigidbody2D component attached to the player GameObject.
     bool FacingRight = true;            // For determining which way the player is curently facing.
 
-	void Awake() 
+	public void ImposedAwake() 
     {
 	    // Setting up references
         GroundCheck = transform.Find("GroundCheck");
@@ -25,7 +25,7 @@ public class P2D_Motor : MonoBehaviour
         p_Rigidbody2D = GetComponent<Rigidbody2D>();
 	}
 	
-	void FixedUpdate() 
+	public void ImposedFixedUpdate() 
     {
         Grounded = false;
 
@@ -59,11 +59,11 @@ public class P2D_Motor : MonoBehaviour
             // Move the character
             p_Rigidbody2D.velocity = new Vector2(move * p_MaxSpeed, p_Rigidbody2D.velocity.y);
 
-            if (move > 0 && FacingRight)
+            if (move > 0 && !FacingRight)
             {
                 Flip();
             }
-            else if (move < 0 && !FacingRight)
+            else if (move < 0 && FacingRight)
             {
                 Flip();
             }
