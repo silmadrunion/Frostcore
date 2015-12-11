@@ -16,10 +16,20 @@ public class GameMaster : MonoBehaviour {
     public Transform m_Player;
     public Transform spawnPoint;
     public float spawnDelay = 2f;
+    public Transform spawnPrefab;
+
+    public CameraShake camShake;
 
 	void Start() 
     {
-	
+        if (camShake == null)
+        {
+            camShake = GetComponent<CameraShake>();
+        }
+        if (camShake == null)
+        {
+            Debug.LogError("No CameraShake component on _GameMaster");
+        }
 	}
 
     IEnumerator _RespawnPlayer()

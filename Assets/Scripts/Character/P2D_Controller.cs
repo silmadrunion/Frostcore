@@ -7,6 +7,7 @@ public class P2D_Controller : MonoBehaviour
 {
     private P2D_Motor _Motor;
     private P2D_Animator _Animator;
+    private P2DI_DestroyBlock _DestroyBlock;
     private bool isJumping;
 
     private float timeToFire;
@@ -17,6 +18,8 @@ public class P2D_Controller : MonoBehaviour
         _Motor.ImposedAwake();
 
         _Animator = GetComponent<P2D_Animator>();
+
+        _DestroyBlock = GetComponent<P2DI_DestroyBlock>();
 	}
 	
 	void Update() 
@@ -29,6 +32,12 @@ public class P2D_Controller : MonoBehaviour
         if (Input.GetButton("Fire1"))
         {
             _Animator.Attack();
+
+            _DestroyBlock.MiningStart();
+        }
+        else
+        {
+            _DestroyBlock.MiningStop();
         }
 	}
 

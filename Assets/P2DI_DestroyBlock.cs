@@ -3,7 +3,7 @@ using System.Collections;
 
 public class P2DI_DestroyBlock : MonoBehaviour {
 
-    private bool _inMining;
+    private bool _isMining;
     private Camera _camera;
     private float _m_Resistance;
     private float _speed;
@@ -11,27 +11,29 @@ public class P2DI_DestroyBlock : MonoBehaviour {
     private Transform _block;
 
 	void Start () {
-        _inMining = false;
+        _isMining = false;
         _camera = Camera.main;
 	}
 
 	public void MiningStart()
     {
         _time = 0;
-        _inMining = true;
+        _isMining = true;
     }
 
     void Update()
     {
         Transform _previousBlock = null;
-        if (_inMining == true)
+        if (_isMining == true)
         {
-            if (isBreakabel() == true)
+            if (isBreakable() == true)
             {
                 if (_previousBlock != _block)
+                {
                     _time = 0;
-                _previousBlock = _block;
-                _time += Time.deltaTime * _speed;
+                    _previousBlock = _block;
+                    _time += Time.deltaTime * _speed;
+                }
             }
             else
                 _time = 0;
@@ -42,15 +44,15 @@ public class P2DI_DestroyBlock : MonoBehaviour {
         }
     }
     
-    //verifica daca jucatorul a dat click pe un obiect care are tagul "Breakabel"
-    private bool isBreakabel()
+    // Check to see if the player clicked an object with the Breakable tag
+    private bool isBreakable()
     {
         RaycastHit hit;
         Ray ray = _camera.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out hit))
         {
             Transform objectHit = hit.transform;
-            if (objectHit.tag == "Breakabel")
+            if (objectHit.tag == "Breakable")
             {
                 _block = objectHit;
                 _m_Resistance = objectHit.GetComponent<BlockBreak>().m_Resistance;
@@ -63,6 +65,6 @@ public class P2DI_DestroyBlock : MonoBehaviour {
     public void MiningStop()
     {
         _time = 0;
-        _inMining = false;
+        _isMining = false;
     }
 }
