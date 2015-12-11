@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[RequireComponent(typeof(Rigidbody2D))]
 public class AI_Motor : MonoBehaviour 
 {
     [SerializeField] private float m_MaxSpeed = 10f;    // Player max move speed on X axis.
@@ -55,11 +56,11 @@ public class AI_Motor : MonoBehaviour
         }
     }
 
-    public void Move(float move)
+    public void Move(Vector2 move)
     {
         if (Grounded)
         {
-            k_Rigidbody2D.velocity = new Vector2(move * m_MaxSpeed, k_Rigidbody2D.velocity.y);
+            k_Rigidbody2D.AddForce(move);
         }
     }
 

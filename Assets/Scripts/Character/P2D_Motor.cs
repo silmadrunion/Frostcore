@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[RequireComponent(typeof(Rigidbody2D))]
 public class P2D_Motor : MonoBehaviour 
 {
     [SerializeField] private float m_MaxSpeed = 10f;                    // Player max move speed on X axis.
