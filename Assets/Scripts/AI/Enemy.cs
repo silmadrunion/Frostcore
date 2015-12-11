@@ -29,19 +29,16 @@ public class Enemy : MonoBehaviour
 	
 	void Update () 
     {
-	    if(eStats.curHP == 0)
-        {
-            Dead();
-        }
-	}
 
-    void Dead()
-    {
-        Destroy(transform.gameObject);
-    }
+	}
 
     public void ApplyDamage(float damage)
     {
         eStats.curHP -= damage;
+
+        if (eStats.curHP == 0)
+        {
+            GameMaster.KillEnemy(this);
+        }
     }
 }

@@ -42,6 +42,8 @@ public class Player : MonoBehaviour
         pStats.ResetHP();
 
         curTime = Time.time;
+
+        GameMaster.gm.m_Player = this.transform;
 	}
 	
 	void Update() 
@@ -51,22 +53,17 @@ public class Player : MonoBehaviour
             pStats.curHP += pStats.regenHP;
             curTime = Time.time + 1f;
         }
-
-        if (pStats.curHP == 0)
-        {
-            Dead();
-        }
 	}
 
     void ApplyDamage(float damage)
     {
         pStats.curHP -= damage;
-    }
 
-    public void Dead()
-    {
-        IsDead = true;
-        transform.gameObject.SetActive(false);
+        if(pStats.curHP == 0)
+        {
+            IsDead = true;
+            GameMaster.KillPlayer(this);
+        }
     }
 
     void OnGUI()
