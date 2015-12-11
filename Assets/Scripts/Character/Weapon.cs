@@ -13,6 +13,9 @@ public class Weapon : MonoBehaviour
     float timeToSpawnEffect;
     [SerializeField] private float effectSpawnRate = 10;
 
+    private float camShakeAmt = 0.05f;
+    private float camShakeLength = 0.1f;
+
     float timeToFire = 0;
     Transform firePoint;
 
@@ -114,6 +117,7 @@ public class Weapon : MonoBehaviour
 
         Destroy(clone.gameObject, 0.02f);
 
-        //Shake the camera
+        // Shake the camera
+        GameMaster.gm.camShake.Shake(camShakeAmt, camShakeLength);
     }
 }
