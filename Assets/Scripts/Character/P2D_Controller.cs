@@ -51,8 +51,9 @@ public class P2D_Controller : MonoBehaviour
         if(Input.GetAxis("Horizontal") > deadZone || Input.GetAxis("Horizontal") < -deadZone)
             moveHorizontal = Input.GetAxis("Horizontal");
 
-        _Motor.ImposedFixedUpdate();
         _Motor.Move(moveHorizontal, isJumping, crouch);
+
+        _Motor.ImposedFixedUpdate();
 
         isJumping = false;
     }

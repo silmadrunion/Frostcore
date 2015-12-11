@@ -39,6 +39,11 @@ public class AI_Controller : MonoBehaviour
     {
         seeker = GetComponent<Seeker>();
 
+        if (seeker == null)
+        {
+            Debug.LogError("No Seeker component on this GameObject");
+        }
+
         if (Target == null)
         {
             if (!searchingForPlayer)
@@ -70,7 +75,7 @@ public class AI_Controller : MonoBehaviour
             searchingForPlayer = false;
             StartCoroutine(UpdatePath());
 
-            return false;
+            yield break;
         }
     }
 
@@ -84,7 +89,7 @@ public class AI_Controller : MonoBehaviour
                 StartCoroutine(SearchForPlayer());
             }
 
-            return false;
+            yield break;
         }
 
         // Start a new path to the target position, return the results on the OnPathComplete method
@@ -92,6 +97,15 @@ public class AI_Controller : MonoBehaviour
 
         yield return new WaitForSeconds(1f / updateRate);
         StartCoroutine(UpdatePath());
+    }
+
+    public void OnPathComplete(Path p)
+    {
+        if (!p.error)
+        {
+            path = p;
+            currentWaypoint = 0;
+        }
     }
 
     void FixedUpdate()
@@ -116,7 +130,9 @@ public class AI_Controller : MonoBehaviour
             return;
         }
 
-        Distance = Vector2.Distance(transform.position, path.vectorPath[currentWaypoint]);
+        float dis = Vector2.Distance(transform.position, path.vectorPath[currentWaypoint]);
+
+        Distance = Vector2.Distance(transform.position, Target.position);
 
         if(Distance < m_LookAtRange)
         {
@@ -128,25 +144,15 @@ public class AI_Controller : MonoBehaviour
         }
         else if(Distance < m_ChaseRange)
         {
-            Vector2 dir = (path.vectorPath[currentWaypoint] - transform.position).normalized;
-
+            Vector3 dir = (path.vectorPath[currentWaypoint] - transform.position).normalized;
             _Motor.Move(dir);
         }
 
-        if (Distance < nextWaypointDistance)
+        if (dis < nextWaypointDistance)
         {
             currentWaypoint++;
         }
 
         _Motor.ImposedFixedUpdate();
-    }
-
-    public void OnPathComplete(Path p)
-    {
-        if (!p.error)
-        {
-            path = p;
-            currentWaypoint = 0;
-        }
     }
 }
