@@ -56,11 +56,14 @@ public class AI_Motor : MonoBehaviour
         }
     }
 
-    public void Move(Vector2 move)
+    public void Move(Vector3 move)
     {
         if (Grounded)
         {
-            k_Rigidbody2D.AddForce(move);
+            if(move.x > 0)
+                k_Rigidbody2D.velocity = new Vector2(move.magnitude * m_MaxSpeed, k_Rigidbody2D.velocity.y);
+            else if(move.x < 0)
+                k_Rigidbody2D.velocity = new Vector2(-move.magnitude * m_MaxSpeed, k_Rigidbody2D.velocity.y);
         }
     }
 

@@ -18,6 +18,9 @@ public class P2D_Motor : MonoBehaviour
     private Rigidbody2D k_Rigidbody2D;  // The Rigidbody2D component attached to the player GameObject.
     bool FacingRight = true;            // For determining which way the player is curently facing.
 
+    private Transform Graphics;         // Stores the Transform component of the Arm attached to the player.
+    private ArmRotation armRotation;    // Used to store the rotation of the arm. 
+
 	public void ImposedAwake() 
     {
 	    // Setting up references
@@ -25,6 +28,26 @@ public class P2D_Motor : MonoBehaviour
         CeilingCheck = transform.Find("CeilingCheck");
         k_Rigidbody2D = GetComponent<Rigidbody2D>();
 	}
+
+    void Start()
+    {
+        Graphics = transform.FindChild("Graphics");
+        armRotation = transform.FindChild("Arm").GetComponent<ArmRotation>();
+    }
+
+    public void ImposedUpdate()
+    {
+        if (armRotation.rotZ > 90 || armRotation.rotZ < -90)
+        {
+            if (FacingRight)
+                Flip();
+        }
+        else
+        {
+            if (!FacingRight)
+                Flip();
+        }
+    }
 	
 	public void ImposedFixedUpdate() 
     {
@@ -84,8 +107,12 @@ public class P2D_Motor : MonoBehaviour
         // Switch the way the player is labeled as facing
         FacingRight = !FacingRight;
 
-        Vector3 tempPlayerLocalScale = transform.localScale;
-        tempPlayerLocalScale.x *= -1;
-        transform.localScale = tempPlayerLocalScale;
+        Vector3 tempGraphicsLocalScale = Graphics.localScale;
+        tempGraphicsLocalScale.x *= -1;
+        Graphics.localScale = tempGraphicsLocalScale;
+
+        Vector3 tempArmLocalScale = armRotation.transform.localScale;
+        tempArmLocalScale.y *= -1;
+        armRotation.transform.localScale = tempArmLocalScale;
     }
 }
