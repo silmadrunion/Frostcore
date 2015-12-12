@@ -39,6 +39,8 @@ public class P2D_Controller : MonoBehaviour
         {
             _DestroyBlock.MiningStop();
         }
+
+        _Motor.ImposedUpdate();
 	}
 
     void FixedUpdate()
