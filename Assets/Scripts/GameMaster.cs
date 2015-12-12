@@ -25,18 +25,22 @@ public class GameMaster : MonoBehaviour {
         if (camShake == null)
         {
             camShake = GetComponent<CameraShake>();
-        }
-        if (camShake == null)
-        {
-            Debug.LogError("No CameraShake component on _GameMaster");
+            if (camShake == null)
+            {
+                Debug.LogError("No CameraShake component on _GameMaster");
+            }
         }
 	}
 
     IEnumerator _RespawnPlayer()
     {
         yield return new WaitForSeconds(spawnDelay);
+        Transform clonePlayer = Instantiate(m_PlayerPrefab, spawnPoint.position, spawnPoint.rotation) as Transform;
 
-        Instantiate(m_PlayerPrefab, spawnPoint.position, spawnPoint.rotation);
+        m_Player.GetComponent<P2D_Motor>().Reset();
+
+        GameObject cloneEffect = Instantiate(spawnPrefab, spawnPoint.position, spawnPoint.rotation) as GameObject;
+        Destroy(cloneEffect, 3f);
     }
 
     public static void KillPlayer(Player player)

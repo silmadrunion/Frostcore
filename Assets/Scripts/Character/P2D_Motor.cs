@@ -115,4 +115,33 @@ public class P2D_Motor : MonoBehaviour
         tempArmLocalScale.y *= -1;
         armRotation.transform.localScale = tempArmLocalScale;
     }
+
+    public void Reset()
+    {
+        if (transform.localScale.x < 0)
+        {
+            Vector3 tempPlayerLocalScale = transform.localScale;
+            tempPlayerLocalScale.x *= -1;
+            transform.localScale = tempPlayerLocalScale;
+        }
+
+        if (Graphics.localScale.x < 0)
+        {
+            Vector3 tempGraphicsLocalScale = Graphics.localScale;
+            tempGraphicsLocalScale.x *= -1;
+            Graphics.localScale = tempGraphicsLocalScale;
+        }
+
+        if (armRotation.transform.localScale.x < 0 || armRotation.transform.localScale.y < 0)
+        {
+            Vector3 tempArmLocalScale = armRotation.transform.localScale;
+            if (armRotation.transform.localScale.x < 0)
+                tempArmLocalScale.x *= -1;
+            if (armRotation.transform.localScale.y < 0)
+                tempArmLocalScale.y *= -1;
+            armRotation.transform.localScale = tempArmLocalScale;
+        }
+
+        FacingRight = true;
+    }
 }
