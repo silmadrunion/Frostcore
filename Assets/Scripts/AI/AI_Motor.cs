@@ -4,8 +4,10 @@ using System.Collections;
 [RequireComponent(typeof(Rigidbody2D))]
 public class AI_Motor : MonoBehaviour 
 {
-    [SerializeField] private float m_MaxSpeed = 10f;    // Player max move speed on X axis.
-    [SerializeField] private LayerMask m_WhatIsGround;  // A mask determining what is ground to the character.
+    [SerializeField] private float m_MaxSpeed = 10f;            // Player max move speed on X axis.
+    [SerializeField] private float m_JumpForce = 400;           // Amount of force added when the player jumps.
+    [SerializeField] private float m_MaxDistanceToAWall = 1.5f; // Stop hitting yourself...
+    [SerializeField] private LayerMask m_WhatIsGround;          // A mask determining what is ground to the character.
 
     private Transform GroundCheck;      // A position marking where to check if the player is grounded.
     const float GroundedRadius = .2f;   // Radius of the overlap circle to determine if grounded.
@@ -58,12 +60,47 @@ public class AI_Motor : MonoBehaviour
 
     public void Move(Vector3 move)
     {
+
+        float moveHorizontal = move.magnitude;
+        moveHorizontal = (move.x > 0 ? moveHorizontal : moveHorizontal * -1);
+
+        k_Rigidbody2D.velocity = new Vector2(moveHorizontal * m_MaxSpeed, k_Rigidbody2D.velocity.y);
+
         if (Grounded)
         {
-            if(move.x > 0)
-                k_Rigidbody2D.velocity = new Vector2(move.magnitude * m_MaxSpeed, k_Rigidbody2D.velocity.y);
-            else if(move.x < 0)
-                k_Rigidbody2D.velocity = new Vector2(-move.magnitude * m_MaxSpeed, k_Rigidbody2D.velocity.y);
+            if (move.y > 0)
+            {
+                if (move.x > 0)
+                {
+                    if (move.y >= move.x)
+                    {
+                        k_Rigidbody2D.velocity = Vector2.zero;
+                        k_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce));
+                    }
+                }
+                else if (move.x < 0)
+                {
+                    if (move.y >= -move.x)
+                    {
+                        k_Rigidbody2D.velocity = Vector2.zero;
+                        k_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce));
+                    }
+                }
+            }
+        }
+        else
+        {
+            StopHittingTheWall(); // You dummie
+        }
+    }
+
+    void StopHittingTheWall()
+    {
+        RaycastHit2D hit = Physics2D.Raycast(GroundCheck.position, transform.forward, m_MaxDistanceToAWall, m_WhatIsGround);
+
+        if(hit.collider != null)
+        {
+            k_Rigidbody2D.velocity = new Vector2(0f, k_Rigidbody2D.velocity.y);
         }
     }
 
