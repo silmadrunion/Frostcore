@@ -20,7 +20,7 @@ public class P2D_Motor : MonoBehaviour
     const float CeilingRadius = .01f;   // Radius of the overlap circle to determine if the player can stand up.
     private Rigidbody2D k_Rigidbody2D;  // The Rigidbody2D component attached to the player GameObject.
     bool FacingRight = true;            // For determining which way the player is curently facing.
-    bool IsDashing = false;             // For determining wheather or not the player is dashing.
+    public bool IsDashing = false;             // For determining wheather or not the player is dashing.
     float dashTime;                     // To check for how long should the player dash.
 
     private Transform Graphics;         // Stores the Transform component of the Arm attached to the player.
