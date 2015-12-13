@@ -51,7 +51,7 @@ public class P2D_Controller : MonoBehaviour
             isSprinting = Input.GetKey(KeyCode.LeftShift);
         }
 
-        if (!isDashing)
+        if (!isDashing && !_Motor.IsDashing)
         {
             if (Input.GetKeyDown(KeyCode.LeftShift))
             {
@@ -69,6 +69,10 @@ public class P2D_Controller : MonoBehaviour
             }
         }
 
+        if(Input.GetKeyUp(KeyCode.LeftShift))
+        {
+            shiftWasPressed = false;
+        }
         _Motor.ImposedUpdate();
 	}
 
