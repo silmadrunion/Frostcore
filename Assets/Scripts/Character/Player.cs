@@ -25,7 +25,7 @@ public class Player : MonoBehaviour
         public float PlayerTemperature
         {
             get { return _PlayerTemperature; }
-            set { _PlayerTemperature = Mathf.Clamp(value, 35, 42); }
+            set { _PlayerTemperature = Mathf.Clamp(value, 20, 38); }
         } 
 
         public void ResetHP()
