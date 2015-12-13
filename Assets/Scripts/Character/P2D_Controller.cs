@@ -8,7 +8,13 @@ public class P2D_Controller : MonoBehaviour
     private P2D_Motor _Motor;
     private P2D_Animator _Animator;
     private P2DI_DestroyBlock _DestroyBlock;
+
     private bool isJumping;
+
+    private bool isSprinting;
+    private float timeFromLastShiftPress;
+    private bool shiftWasPressed;
+    private bool isDashing;
 
     private float timeToFire;
 
@@ -40,6 +46,33 @@ public class P2D_Controller : MonoBehaviour
             _DestroyBlock.MiningStop();
         }
 
+        if (!isSprinting)
+        {
+            isSprinting = Input.GetKey(KeyCode.LeftShift);
+        }
+
+        if (!isDashing && !_Motor.IsDashing)
+        {
+            if (Input.GetKeyDown(KeyCode.LeftShift))
+            {
+                shiftWasPressed = true;
+                timeFromLastShiftPress = Time.time;
+            }
+            else if (Input.GetKeyUp(KeyCode.LeftShift))
+            {
+                if (shiftWasPressed == true && Time.time < timeFromLastShiftPress + 0.2f)
+                {
+                    isDashing = true;
+                }
+                else
+                    isDashing = false;
+            }
+        }
+
+        if(Input.GetKeyUp(KeyCode.LeftShift))
+        {
+            shiftWasPressed = false;
+        }
         _Motor.ImposedUpdate();
 	}
 
@@ -53,10 +86,14 @@ public class P2D_Controller : MonoBehaviour
         if(Input.GetAxis("Horizontal") > deadZone || Input.GetAxis("Horizontal") < -deadZone)
             moveHorizontal = Input.GetAxis("Horizontal");
 
-        _Motor.Move(moveHorizontal, isJumping, crouch);
+        _Motor.Move(moveHorizontal, isJumping, crouch, isSprinting);
+
+        _Motor.Dash(moveHorizontal, isDashing);
 
         _Motor.ImposedFixedUpdate();
 
         isJumping = false;
+        isSprinting = false;
+        isDashing = false;
     }
 }

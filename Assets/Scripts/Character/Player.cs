@@ -57,6 +57,8 @@ public class Player : MonoBehaviour
 
     void ApplyDamage(float damage)
     {
+        if (GetComponent<P2D_Motor>().IsDashing)
+            return;
         pStats.curHP -= damage;
 
         if(pStats.curHP == 0)
