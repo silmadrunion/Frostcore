@@ -3,66 +3,71 @@ using System.Collections;
 
 public class P2DI_DestroyBlock : MonoBehaviour {
 
-    private bool _inMining;
+    private bool _isMining;
     private Camera _camera;
     private float _m_Resistance;
-    private float _speed;
+    private float _speed=1;
     private float _time;
-    private Transform _block;
+	private GameObject _block;
+	private GameObject _previousBlock = null;
 
 	void Start () {
-        _inMining = false;
+        _isMining = false;
         _camera = Camera.main;
 	}
 
 	public void MiningStart()
     {
         _time = 0;
-        _inMining = true;
+        _isMining = true;
     }
 
     void Update()
     {
-        Transform _previousBlock = null;
-        if (_inMining == true)
+        if (_isMining == true)
         {
-            if (isBreakabel() == true)
+            if (isBreakable() == true)
             {
-                if (_previousBlock != _block)
-                    _time = 0;
-                _previousBlock = _block;
-                _time += Time.deltaTime * _speed;
+				if (_previousBlock != _block)
+                {
+					_time = Time.deltaTime * _speed;
+                    _previousBlock = _block;
+                }
+				else
+					_time += Time.deltaTime * _speed;
             }
             else
                 _time = 0;
         }
-        if (_time>=_m_Resistance)
+        if (_time>=_m_Resistance && _m_Resistance!=0)
         {
-            Destroy(_block.gameObject);
+            Destroy(_block);
         }
     }
     
-    //verifica daca jucatorul a dat click pe un obiect care are tagul "Breakabel"
-    private bool isBreakabel()
+    // Check to see if the player clicked an object with the Breakable tag
+    private bool isBreakable()
     {
-        RaycastHit hit;
-        Ray ray = _camera.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out hit))
-        {
-            Transform objectHit = hit.transform;
-            if (objectHit.tag == "Breakabel")
-            {
-                _block = objectHit;
-                _m_Resistance = objectHit.GetComponent<BlockBreak>().m_Resistance;
-                return true;
-            }
-        }
-        return false;
+		GameObject objectHit = null;
+		Vector3 pos2 = _camera.ScreenToWorldPoint (Input.mousePosition);
+		Vector2 pos = new Vector2 (pos2.x, pos2.y);
+
+		try{
+			objectHit = Physics2D.OverlapPoint(pos).gameObject;
+			if (objectHit.tag == "Breakable")
+			{
+				_block = objectHit;
+				_m_Resistance = objectHit.GetComponent<BlockBreak>().m_Resistance;
+				return true;
+			}
+		}catch{};
+        
+		return false;
     }
 
     public void MiningStop()
     {
         _time = 0;
-        _inMining = false;
+        _isMining = false;
     }
 }
