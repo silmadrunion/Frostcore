@@ -1,6 +1,6 @@
 fileFormatVersion: 2
 guid: 58b82a98aac8f19489819654a4c670c6
-timeCreated: 1450812970
+timeCreated: 1451324806
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
@@ -13,7 +13,7 @@ TextureImporter:
     21300012: ArmInner
     21300014: HandHoldRifleOuter
     21300016: HandHoldRifkeInner
-    21300018: HandHodlSwordInner
+    21300018: HandHoldSwordOuter
     21300020: HandNormalOuter
     21300022: HandNormalInner
     21300024: Hand1Inner
@@ -28,7 +28,7 @@ TextureImporter:
     21300042: FootInner
     21300044: LegLowerOuter
     21300046: Hand2Outer
-    21300048: HandHoldSwordOuter
+    21300048: HandHoldSwordInner
   serializedVersion: 2
   mipmaps:
     mipMapMode: 0
@@ -165,7 +165,7 @@ TextureImporter:
       alignment: 9
       pivot: {x: .531241894, y: .90436554}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: HandHodlSwordInner
+    - name: HandHoldSwordOuter
       rect:
         serializedVersion: 2
         x: 153
@@ -315,7 +315,7 @@ TextureImporter:
       alignment: 9
       pivot: {x: .260885477, y: .897156477}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: HandHoldSwordOuter
+    - name: HandHoldSwordInner
       rect:
         serializedVersion: 2
         x: 182
