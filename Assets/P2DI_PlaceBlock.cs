@@ -15,11 +15,10 @@ public class P2DI_PlaceBlock : MonoBehaviour {
 		Vector3 pos2 = _camera.ScreenToWorldPoint (Input.mousePosition);
 		Vector2 positionClick = new Vector2 (pos2.x, pos2.y);
 		Vector2 placePosition;
-		Debug.Log (positionClick);
 		if (canPlace () == true)
 		{
-			placePosition.x = ((int)((int)positionClick.x/(int)blockDimension.x)*blockDimension.x);
-			placePosition.y = ((int)((int)positionClick.y/(int)blockDimension.y)*blockDimension.y);
+            placePosition.x = ((int)(positionClick.x / blockDimension.x) * blockDimension.x + blockDimension.x / 2);
+            placePosition.y = ((int)(positionClick.y / blockDimension.y) * blockDimension.y + blockDimension.y / 2);
 			Instantiate(block, placePosition, Quaternion.identity);
 		}
 	}

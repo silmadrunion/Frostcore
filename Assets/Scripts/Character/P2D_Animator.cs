@@ -1,33 +1,75 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[RequireComponent(typeof(Animator))]
 public class P2D_Animator : MonoBehaviour 
 {
-    [SerializeField] private Animator m_Animator;
+    public static P2D_Animator Instance;
 
-    private float attackDelay = 0.33f;
-    private float passedTime;
+    private Animator m_Animator;
+
+    public float moveSpeed;
 
     void Awake()
     {
+        Instance = this;
+
         m_Animator = GetComponent<Animator>();
     }
 
-	void Start() 
+	public void ImposedFixedUpdate() 
     {
-        float passedTime = Time.time;
-	}
-	
-	void FixedUpdate() 
-    {
-        m_Animator.SetBool("IsAttacking", false);
-	}
+        moveSpeed = (moveSpeed < 0 ? moveSpeed *= -1 : moveSpeed);
 
-    public void Attack()
-    {
-        if (m_Animator.GetBool("IsAttacking")) 
+        m_Animator.SetFloat("MoveSpeed", moveSpeed);
+
+        if(m_Animator.speed <= 0.1f && P2D_Motor.Instance.Grounded)
+        {
+            m_Animator.speed = 1;
+            SetStateJump(false);
+        }
+
+        if(moveSpeed == 0)
+        {
             return;
+        }
 
-        m_Animator.SetBool("IsAttacking", true);
+        if (m_Animator.GetCurrentAnimatorStateInfo(0).IsName("Run"))
+        {
+            m_Animator.speed = Mathf.Clamp(moveSpeed / 8, 1, moveSpeed);
+        }
+        else if (m_Animator.GetCurrentAnimatorStateInfo(0).IsName("Sprint"))
+        {
+            m_Animator.speed = Mathf.Clamp(moveSpeed / 12, 1, moveSpeed);
+        }
+        else if (m_Animator.GetCurrentAnimatorStateInfo(0).IsName("CrouchMove"))
+        {
+            m_Animator.speed = Mathf.Clamp(moveSpeed / 10, 1, moveSpeed);
+        }
+	}
+
+    public void SetStateCrouch(bool crouch)
+    {
+        m_Animator.SetBool("Crouch", crouch);
+    }
+
+    public void SetStateJump(bool jump)
+    {
+        m_Animator.SetBool("Jump", jump);
+    }
+
+    public void SetStateSprint(bool sprint)
+    {
+        m_Animator.SetBool("Sprint", sprint);
+    }
+
+    public void Attack(bool value = true)
+    {
+        m_Animator.SetBool("Attack", value);
+    }
+
+    void SetAnimatorSpeedToZero()
+    {
+        m_Animator.speed = 0.01f;
     }
 }
