@@ -3,7 +3,7 @@ using System.Collections;
 
 public class ArmRotation : MonoBehaviour 
 {
-    [SerializeField] private float rotationOffset = 90;
+    [SerializeField] public float rotationOffset = 45;
 
     public float rotZ;
 

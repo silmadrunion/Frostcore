@@ -56,9 +56,8 @@ public class Weapon : MonoBehaviour
 
     void Shoot()
     {
-        Vector2 mousePosition = new Vector2(Camera.main.ScreenToWorldPoint(Input.mousePosition).x, Camera.main.ScreenToWorldPoint(Input.mousePosition).y);
         Vector2 firePointPosition = new Vector2(firePoint.position.x, firePoint.position.y);
-        RaycastHit2D hit = Physics2D.Raycast(firePointPosition, mousePosition - firePointPosition, 100, m_WhatToHit);
+        RaycastHit2D hit = Physics2D.Raycast(firePointPosition, transform.forward, 100, m_WhatToHit);
 
         if (hit.collider != null)
         {
@@ -76,7 +75,7 @@ public class Weapon : MonoBehaviour
 
             if(hit.collider == null)
             {
-                hitPos = (mousePosition - firePointPosition) * 30;
+                hitPos = (transform.forward) * 30;
                 hitNormal = new Vector3(9999, 9999, 9999);
             }
             else

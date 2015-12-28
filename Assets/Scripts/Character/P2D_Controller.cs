@@ -5,17 +5,20 @@ using System.Collections;
 [RequireComponent(typeof(P2D_Animator))]
 public class P2D_Controller : MonoBehaviour
 {
-    private P2D_Motor _Motor;
-    private P2D_Animator _Animator;
+    public static P2D_Controller Instance;
+
     private P2DI_DestroyBlock _DestroyBlock;
 	private P2DI_PlaceBlock _PlaceBlock;
 
     private bool isJumping;
-
     private bool isSprinting;
+
     private float timeFromLastShiftPress;
     private bool shiftWasPressed;
     private bool isDashing;
+
+    public bool canPlace = false;
+    public bool canBreak = false;
 
 	public GameObject block;
 
@@ -23,10 +26,7 @@ public class P2D_Controller : MonoBehaviour
 
 	void Awake() 
     {
-        _Motor = GetComponent<P2D_Motor>();
-        _Motor.ImposedAwake();
-
-        _Animator = GetComponent<P2D_Animator>();
+        Instance = this;
 
         _DestroyBlock = GetComponent<P2DI_DestroyBlock>();
 		_PlaceBlock = GetComponent<P2DI_PlaceBlock>();
@@ -41,14 +41,18 @@ public class P2D_Controller : MonoBehaviour
 
         if (Input.GetButtonDown("Fire1"))
         {
-            _Animator.Attack();
+            P2D_Animator.Instance.Attack();
 
-            _DestroyBlock.MiningStart();
-			_PlaceBlock.Place(block);
+            if (canPlace)
+                _DestroyBlock.MiningStart();
+            else if (canBreak)
+                _PlaceBlock.Place(block);
 
         }
         else if (Input.GetButtonUp("Fire1"))
         {
+            P2D_Animator.Instance.Attack(false);
+
             _DestroyBlock.MiningStop();
         }
 
@@ -57,7 +61,7 @@ public class P2D_Controller : MonoBehaviour
             isSprinting = Input.GetKey(KeyCode.LeftShift);
         }
 
-        if (!isDashing && !_Motor.IsDashing)
+        if (!isDashing && !P2D_Motor.Instance.IsDashing)
         {
             if (Input.GetKeyDown(KeyCode.LeftShift))
             {
@@ -79,24 +83,25 @@ public class P2D_Controller : MonoBehaviour
         {
             shiftWasPressed = false;
         }
-        _Motor.ImposedUpdate();
+        P2D_Motor.Instance.ImposedUpdate();
 	}
 
     void FixedUpdate()
     {
         var deadZone = 0.1f;
-        bool crouch = Input.GetKey(KeyCode.LeftControl);
+        bool crouch = Input.GetKey(KeyCode.C);
 
         float moveHorizontal = 0f;
 
         if(Input.GetAxis("Horizontal") > deadZone || Input.GetAxis("Horizontal") < -deadZone)
             moveHorizontal = Input.GetAxis("Horizontal");
 
-        _Motor.Move(moveHorizontal, isJumping, crouch, isSprinting);
+        P2D_Motor.Instance.Move(moveHorizontal, isJumping, crouch, isSprinting);
 
-        _Motor.Dash(moveHorizontal, isDashing);
+        P2D_Motor.Instance.Dash(moveHorizontal, isDashing);
 
-        _Motor.ImposedFixedUpdate();
+        P2D_Motor.Instance.ImposedFixedUpdate();
+        P2D_Animator.Instance.ImposedFixedUpdate();
 
         isJumping = false;
         isSprinting = false;
