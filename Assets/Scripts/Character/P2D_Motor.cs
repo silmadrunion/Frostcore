@@ -21,12 +21,11 @@ public class P2D_Motor : MonoBehaviour
     private Transform CeilingCheck;     // A position marking where to check for ceilings.
     const float CeilingRadius = .01f;   // Radius of the overlap circle to determine if the player can stand up.
     private Rigidbody2D k_Rigidbody2D;  // The Rigidbody2D component attached to the player GameObject.
-    bool FacingRight = true;            // For determining which way the player is curently facing.
+    public bool FacingRight = true;            // For determining which way the player is curently facing.
     public bool IsDashing = false;             // For determining wheather or not the player is dashing.
     float dashTime;                     // To check for how long should the player dash.
 
     private Transform Graphics;                          // Stores the Transform component of the Arm attached to the player.
-    [SerializeField] private ArmRotation armRotation;    // Used to store the rotation of the arm. 
 
 	public void Awake() 
     {
@@ -45,15 +44,9 @@ public class P2D_Motor : MonoBehaviour
 
     public void ImposedUpdate()
     {
-        if (armRotation.rotZ > 90 || armRotation.rotZ < -90)
+        if (ArmRotation.Instance.rotZ > 90 || ArmRotation.Instance.rotZ < -90)
         {
-            if (FacingRight)
-                Flip();
-        }
-        else
-        {
-            if (!FacingRight)
-                Flip();
+            Flip();
         }
     }
 	
@@ -150,11 +143,6 @@ public class P2D_Motor : MonoBehaviour
         Vector3 tempPlayerLocalScale = transform.localScale;
         tempPlayerLocalScale.x *= -1;
         transform.localScale = tempPlayerLocalScale;
-
-        if (armRotation.rotationOffset > 0)
-            armRotation.rotationOffset -= 180;
-        else if (armRotation.rotationOffset < 0)
-            armRotation.rotationOffset += 180;
     }
 
     public void Reset()

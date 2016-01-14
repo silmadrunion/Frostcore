@@ -22,10 +22,9 @@ public class P2D_Animator : MonoBehaviour
         moveSpeed = (moveSpeed < 0 ? moveSpeed *= -1 : moveSpeed);
 
         m_Animator.SetFloat("MoveSpeed", moveSpeed);
-
-        if(m_Animator.speed <= 0.1f && P2D_Motor.Instance.Grounded)
+        m_Animator.SetBool("Grounded", P2D_Motor.Instance.Grounded);
+        if (!P2D_Motor.Instance.Grounded)
         {
-            m_Animator.speed = 1;
             SetStateJump(false);
         }
 
@@ -66,10 +65,12 @@ public class P2D_Animator : MonoBehaviour
     public void Attack(bool value = true)
     {
         m_Animator.SetBool("Attack", value);
-    }
 
-    void SetAnimatorSpeedToZero()
-    {
-        m_Animator.speed = 0.01f;
+        if(value)
+            ArmRotation.Instance.UpdateArmRotation();
+        else
+        {
+            ArmRotation.Instance.UpdateArmRotation(true);
+        }
     }
 }
