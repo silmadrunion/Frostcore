@@ -17,6 +17,14 @@ public class P2D_Controller : MonoBehaviour
     private bool shiftWasPressed;
     private bool isDashing;
 
+    /// <summary>
+    /// Keys that need to be pressed in order to use an Hotbar's item
+    /// </summary>
+    public KeyCode[] HotbarKeyCodes;
+
+    public Transform ItemHolderObject;
+    public Transform ItemBeingHeld;
+
     public bool canPlace = false;
     public bool canBreak = false;
 
@@ -84,6 +92,41 @@ public class P2D_Controller : MonoBehaviour
             shiftWasPressed = false;
         }
         P2D_Motor.Instance.ImposedUpdate();
+
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            int tries = 0;
+
+            do
+            {
+                if (Character.Instance.ItemEquippedNR == 3)
+                    Character.Instance.ItemEquippedNR = 0;
+                else
+                    Character.Instance.ItemEquippedNR++;
+
+                tries++;
+
+                if (tries > 4)
+                    break;
+            } while (Character.Instance.WeaponSlot[Character.Instance.ItemEquippedNR] == null);
+            Character.Instance.UpdateEquipment();
+        }
+
+        if (!InventoryDisplay.displayInventory)
+            return;
+
+        int i = 0;
+        foreach (KeyCode k in HotbarKeyCodes)
+        {
+            if (Input.GetKeyDown(k))
+            {
+                if (Inventory.Instance.HotbarContents[i].GetComponent<Item>().isUsable)
+                    Inventory.Instance.UseItem(Inventory.Instance.HotbarContents[i]);
+                else
+                    Inventory.Instance.EquipItem(Inventory.Instance.HotbarContents[i]);
+            }
+            i++;
+        }
 	}
 
     void FixedUpdate()

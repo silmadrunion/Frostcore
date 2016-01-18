@@ -58,8 +58,58 @@ public class EquipmentSlot : MonoBehaviour
         if (InventoryDisplay.Instance.itemBeingDragged.rectTransform != null)
             return;
 
-        InventoryDisplay.Instance.itemBeingDragged.rectTransform = transform.GetChild(0).GetComponent<RectTransform>();
+        InventoryDisplay.Instance.itemBeingDragged.rectTransform = (Instantiate(transform.GetChild(0).gameObject, Vector3.zero, Quaternion.identity) as GameObject).GetComponent<RectTransform>();
+        transform.GetChild(0).GetComponent<Image>().sprite = InventoryDisplay.Instance.NullItemIcon;
+        InventoryDisplay.Instance.itemBeingDragged.copyOf = transform.GetChild(0).GetComponent<RectTransform>();
         InventoryDisplay.Instance.k_ItemBeingDragged = CorrespondingItem;
+        InventoryDisplay.Instance.itemBeingDragged.rectTransform.parent = Inventory.Instance.InventoryContents;
+    }
+
+    public void PlaceInHotbar()
+    {
+        if (Inventory.Instance.HotbarContents[slotNumber] != null)
+            return;
+
+        if (InventoryDisplay.Instance.itemBeingDragged.rectTransform == null)
+            return;
+
+        Item itemBeingDragged = null;
+
+        try
+        {
+            itemBeingDragged = InventoryDisplay.Instance.k_ItemBeingDragged.GetComponent<Item>();
+        }
+        catch { };
+
+        if (itemBeingDragged.EquipSlot != SlotType)
+            return;
+
+        Inventory.Instance.HotbarContents[slotNumber] = itemBeingDragged.transform;
+
+        transform.GetChild(0).GetComponent<Image>().sprite = itemBeingDragged.itemIcon;
+        transform.GetChild(0).GetComponent<Image>().color = Color.white;
+
+        CorrespondingItem = InventoryDisplay.Instance.k_ItemBeingDragged;
+
+        Inventory.Instance.RemoveItem(itemBeingDragged.transform);
+
+        InventoryDisplay.Instance.ClearDraggedItem();
+        InventoryDisplay.Instance.UpdateInventoryList();
+    }
+
+    public void RemoveFromHotbar()
+    {
+        if (Inventory.Instance.HotbarContents[slotNumber] == null)
+            return;
+
+        if (InventoryDisplay.Instance.itemBeingDragged.rectTransform != null)
+            return;
+
+        InventoryDisplay.Instance.itemBeingDragged.rectTransform = (Instantiate(transform.GetChild(0).gameObject, Vector3.zero, Quaternion.identity) as GameObject).GetComponent<RectTransform>();
+        transform.GetChild(0).GetComponent<Image>().sprite = InventoryDisplay.Instance.NullItemIcon;
+        InventoryDisplay.Instance.itemBeingDragged.copyOf = transform.GetChild(0).GetComponent<RectTransform>();
+        InventoryDisplay.Instance.k_ItemBeingDragged = CorrespondingItem;
+        InventoryDisplay.Instance.itemBeingDragged.rectTransform.parent = Inventory.Instance.InventoryContents;
     }
 
     public void ClearSlot()
@@ -72,6 +122,6 @@ public class EquipmentSlot : MonoBehaviour
 
     public void ClearDraggedItem()
     {
-        transform.GetChild(0).GetComponent<RectTransform>().localPosition = Vector3.zero;
+        transform.GetChild(0).GetComponent<Image>().sprite = InventoryDisplay.Instance.itemBeingDragged.rectTransform.GetComponent<Image>().sprite;
     }
 }

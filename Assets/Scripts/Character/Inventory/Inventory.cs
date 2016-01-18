@@ -9,8 +9,12 @@ public class Inventory : MonoBehaviour
     public static Inventory Instance;
 
     //This is the central piece of the Inventory System.
-    [SerializeField]
     public List<Transform> Contents; //The content of the Inventory
+
+    /// <summary>
+    /// Non 'Item' objects that can be accesed by the player without opening the 'Inventory'
+    /// </summary>
+    public Transform[] HotbarContents;
 
     public RectTransform InventoryContents;
     public GameObject ItemRectangle;
@@ -27,6 +31,7 @@ public class Inventory : MonoBehaviour
         Instance = this;
 
         itemHolderObject = gameObject.transform;
+        HotbarContents = new Transform[9];
 
         playersInvDisplay = GetComponent<InventoryDisplay>();
         if (playersInvDisplay == null)
@@ -89,7 +94,6 @@ public class Inventory : MonoBehaviour
 
             if (shouldend) //Exit the loop
             {
-                //Contents=newContents.ToBuiltin(Transform); //!!!!//
                 Contents = newContents;
                 if (DebugMode)
                 {
@@ -127,6 +131,24 @@ public class Inventory : MonoBehaviour
         {
             Debug.Log(item.name + " has been dropped");
         }
+    }
+    
+    public void EquipItem(Transform item)
+    {
+        if (P2D_Controller.Instance.ItemBeingHeld != null)
+        {
+            Destroy(P2D_Controller.Instance.ItemBeingHeld.gameObject);
+            P2D_Controller.Instance.ItemBeingHeld = null;
+        }
+
+        GameObject clone = Instantiate(item, Vector3.zero, Quaternion.identity) as GameObject;
+        clone.transform.parent = P2D_Controller.Instance.ItemHolderObject;
+        P2D_Controller.Instance.ItemBeingHeld = item;
+    }
+
+    public void UseItem(Transform item)
+    {
+        Debug.Log("USE ITEM");
     }
 
     //This will tell you everything that is in the inventory.

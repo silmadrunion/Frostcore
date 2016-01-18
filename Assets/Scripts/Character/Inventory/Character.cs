@@ -17,6 +17,7 @@ public class Character : MonoBehaviour
     private Inventory playersinv; //Refers to the Inventory script.
     private InvAudio invAudio;
 
+    public int ItemEquippedNR;
 
     //Assign the differnet components to variables and other "behind the scenes" stuff.
     void Awake()
@@ -53,7 +54,10 @@ public class Character : MonoBehaviour
         foreach (Item Weapon in WeaponSlot)
         {
             if (Weapon == null)
+            {
+                i++;
                 continue;
+            }
 
             Weapons[i] = (GameObject) Instantiate(Weapon.equippedWeaponVersion, Vector3.zero, Quaternion.identity);
 
@@ -64,9 +68,25 @@ public class Character : MonoBehaviour
             Weapons[i].transform.localRotation = Weapon.equippedWeaponVersion.transform.localRotation;
             Weapons[i].transform.localPosition = Weapon.equippedWeaponVersion.transform.localPosition;
             Weapons[i].transform.localScale = Weapon.equippedWeaponVersion.transform.localScale;
+
+            if (i == ItemEquippedNR)
+                MakeItemActive(Weapons[i]);
+            else
+                MakeItemInactive(Weapons[i]);
+
             i++;
         }
 
         // TODO: Armor equip
+    }
+
+    public void MakeItemInactive(GameObject item)
+    {
+        item.SetActive(false);
+    }
+
+    public void MakeItemActive(GameObject item)
+    {
+        item.SetActive(true);
     }
 }

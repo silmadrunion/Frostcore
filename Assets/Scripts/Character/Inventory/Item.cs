@@ -4,7 +4,6 @@ using UnityEditor;
 
 public enum InventoryEquipSlot
 {
-    Null,
     MeleeWeapon, RangedWeapon, Head, Torso, Legs,
     NonEquippable
 };
@@ -23,6 +22,7 @@ public class Item : MonoBehaviour
 {
     public Sprite itemIcon; //The Icon.
     public bool canGet = true; //If we can pick up the Item.
+    public bool isUsable;
     public float Weight = 0; // Mass of this (1 item, multiple stacks have this multiplied by stacks). (in kg damn 'muricans)
     public bool stackable = false; //Is it stackable? If yes then items with the same itemType will be stacked.
     public int maxStack= 0; //How many Items each stack can have before creating a new one. Remember that the Items that should be stacked should have the same itemType.
@@ -64,22 +64,10 @@ public class Item : MonoBehaviour
         {
             equipmentEffect = GetComponent<EquipmentEffect>();
         }
-
-        if (GetComponent<FirstPersonPickUp>() != null)
-        {
-            FPPickUpFound = true;
-        }
-        else if (transform.GetComponentInChildren<FirstPersonPickUp>() != null)
-        {
-            FPPickUpFound = true;
-        }
     }
 
     void Start()
     {
-        if (EquipSlot != InventoryEquipSlot.Null)
-            return;
-
         if (EquipSlot != InventoryEquipSlot.NonEquippable)
             if(equippedWeaponVersion == null)
             Debug.LogError("No equipped weapon version");
@@ -239,9 +227,7 @@ public class ItemEditor: Editor
         Item myTarget = (Item)target;
 
         myTarget.EquipSlot = (InventoryEquipSlot)EditorGUILayout.EnumPopup("EquipSlot: ", myTarget.EquipSlot);
-
-        if (myTarget.EquipSlot == InventoryEquipSlot.Null)
-            return;
+        myTarget.itemIcon = (Sprite)EditorGUILayout.ObjectField("Item Icon", myTarget.itemIcon, typeof(Sprite));
 
         myTarget.canGet = EditorGUILayout.Toggle("Can Pick Up Item? ", myTarget.canGet);
 
@@ -249,6 +235,8 @@ public class ItemEditor: Editor
 
         if (myTarget.EquipSlot == InventoryEquipSlot.NonEquippable)
         {
+            myTarget.isUsable = EditorGUILayout.Toggle("Usable: ", myTarget.isUsable);
+
             myTarget.stackable = EditorGUILayout.Toggle("Stackable", myTarget.stackable);
 
             if (myTarget.stackable)
