@@ -11,19 +11,22 @@ public class InventoryDisplay : MonoBehaviour
 
     public RectTransform Inventory;
     public Vector2 InitialPos = new Vector2(140, 180);
-    public Rect TrueInventoryRect = new Rect(807.6874f, 617.4537f, 671f, 584f);
+
+    public RectTransform HotBar;
 
     public static InventoryDisplay Instance;
 
     public struct DraggedItem
     {
         public RectTransform rectTransform;
+        public RectTransform copyOf;
         public int posInContents;
     }
-
+    
     //Variables for dragging:
     public DraggedItem itemBeingDragged; //This refers to the 'Icon'.
     public Transform k_ItemBeingDragged;    //This not.
+    public Sprite NullItemIcon;
     private Vector2 draggedItemPosition; //Where on the screen we are dragging our Item.
     private Vector2 draggedItemSize;//The size of the item icon we are dragging.
 
@@ -64,6 +67,14 @@ public class InventoryDisplay : MonoBehaviour
         for (int i = 0; i < 6; i++)
         {
             ItemIcons[i] = associatedInventory.InventoryContents.GetChild(i) as RectTransform;
+        }
+
+        for (int i = 0; i < 6; i++)
+        {
+            ItemIcons[i].GetChild(0).GetComponent<Image>().sprite = NullItemIcon;
+            ItemIcons[i].GetChild(1).GetComponent<Text>().text = " ";
+
+            ItemIcons[i].gameObject.SetActive(false);
         }
 
         if (GetComponent<Character>() != null)
@@ -133,13 +144,13 @@ public class InventoryDisplay : MonoBehaviour
         CarryWeightBar.GetComponent<Image>().fillAmount = Player.Instance.pStats.CarryWeight / Player.Instance.pStats.MaxCarryWeight;
 
         Vector2 mousePos = Input.mousePosition;
-        
+
         if (Input.GetMouseButtonDown(0))
         {
-            if (mousePos.x > TrueInventoryRect.position.x && mousePos.y < TrueInventoryRect.position.y &&
-                mousePos.x < TrueInventoryRect.position.x + TrueInventoryRect.width && mousePos.y > TrueInventoryRect.position.y - TrueInventoryRect.height + 120)
+            if (mousePos.x > Inventory.position.x && mousePos.y < Inventory.position.y &&
+                mousePos.x < Inventory.position.x + Inventory.rect.width + HotBar.rect.width && mousePos.y > Inventory.position.y - Inventory.rect.height * 5 / 6)
             {
-                
+
             }
             else
             {
@@ -195,10 +206,17 @@ public class InventoryDisplay : MonoBehaviour
     {
         try
         {
-            itemBeingDragged.rectTransform.parent.GetComponent<ItemIcon>().ClearDraggedItem();
+            itemBeingDragged.copyOf.parent.GetComponent<ItemIcon>().ClearDraggedItem();
         }
         catch { };
+
+        if (itemBeingDragged.rectTransform == null)
+            return;
+
+        Destroy(itemBeingDragged.rectTransform.gameObject);
+
         itemBeingDragged.rectTransform = null;
+        itemBeingDragged.copyOf = null;
         itemBeingDragged.posInContents = -1;
         k_ItemBeingDragged = null;
     }
