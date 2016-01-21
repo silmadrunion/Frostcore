@@ -52,6 +52,7 @@ public class Lighting : MonoBehaviour
         foreach (Transform block in blocksInCollider)
             if (block == theCollider.transform)
             {
+                block.GetComponent<SpriteRenderer>().color = Color.black;
                 blocksInCollider.Remove(block);
                 break;
             }
