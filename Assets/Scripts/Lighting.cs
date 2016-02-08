@@ -5,14 +5,9 @@ using System.Collections.Generic;
 
 public class Lighting : MonoBehaviour
 {
-    public struct block
-    {
-        public Transform BlockTransform;
-        public bool marked;
-    }
-
     public float Power; // Number of blocks that you can see thru
-    List<block> blocksInCollider;
+    List<Transform> blocksInCollider;
+    List<bool> marks;
 
     public LayerMask discrimination;
 
@@ -21,7 +16,8 @@ public class Lighting : MonoBehaviour
 
     void Start()
     {
-        blocksInCollider = new List<block>();
+        blocksInCollider = new List<Transform>();
+        marks = new List<bool>();
 
         passedTime = Time.time;
     }
@@ -35,76 +31,70 @@ public class Lighting : MonoBehaviour
         passedTime = Time.time + UpdateRate;
 
 
-        foreach (block b in blocksInCollider)
+        for (int i = 0; i < blocksInCollider.Count; i++ )
         {
-            if (b.marked == true)
-                continue;
-
-            if (b.BlockTransform.tag == "Air")
+            if (marks[i])
                 continue;
 
             try
             {
-                RaycastHit2D[] hit = Physics2D.RaycastAll(transform.position, b.BlockTransform.position - transform.position, Vector3.Distance(transform.position, b.BlockTransform.position), discrimination);
-                //Debug.DrawLine(transform.position, b.BlockTransform.position, Color.green, .1f);
+                RaycastHit2D[] hit = Physics2D.RaycastAll(transform.position, blocksInCollider[i].position - transform.position, Vector3.Distance(transform.position, blocksInCollider[i].position), discrimination);
+                //Debug.DrawLine(transform.position, b.BlockTransform.position, Color.green, 1f);
                 int modifier = 0;
                 foreach (RaycastHit2D hitmark in hit)
                 {
-                    int index = blocksInCollider.FindIndex(x => x.BlockTransform == hitmark.transform);
-                    block aux = new block();
-                    aux.BlockTransform = hitmark.transform;
-
+                    int index;
+                    for (index = i; index < blocksInCollider.Count; index++)
+                    {
+                        if (marks[index])
+                            continue;
+                        if (blocksInCollider[index] == hitmark)
+                            break;
+                    }
                     if (modifier <= Power)
                     {
-                        if (aux.BlockTransform.tag == "Air")
+                        if (blocksInCollider[index].tag == "Air")
                         {
-                            aux.BlockTransform.GetComponent<SpriteRenderer>().color = Color.clear;
+                            if (blocksInCollider[index].GetComponent<SpriteRenderer>().color != Color.clear)
+                                blocksInCollider[index].GetComponent<SpriteRenderer>().color = Color.clear;
                         }
                         else
                         {
-                            aux.BlockTransform.GetComponent<SpriteRenderer>().color = new Vector4(255 - monotony * modifier, 255 - monotony * modifier, 255 - monotony * modifier, 255);
+                            if (blocksInCollider[index].GetComponent<SpriteRenderer>().color != new Color(255 - monotony * modifier, 255 - monotony * modifier, 255 - monotony * modifier, 255))
+                                blocksInCollider[index].GetComponent<SpriteRenderer>().color = new Color(255 - monotony * modifier, 255 - monotony * modifier, 255 - monotony * modifier, 255);
                             modifier++;
                         }
                     }
                     else
                     {
-                        aux.BlockTransform.GetComponent<SpriteRenderer>().color = Color.black;
+
                     }
 
-                    aux.marked = true;
-                    blocksInCollider[index] = aux;
+                    marks[index] = true;
                 }
 
             }
             catch { };
         }
 
-        for (int i = 0; i < blocksInCollider.Count; i++)
-        {
-            block aux = new block();
-            aux.BlockTransform = blocksInCollider[i].BlockTransform;
-            aux.marked = false;
-            blocksInCollider[i] = aux;
-        }
+        for (int i = 0; i < marks.Count; i++)
+            marks[i] = false;
     }
 
     void OnTriggerEnter2D(Collider2D theCollider)
     {
         if (theCollider.transform.GetComponent<SpriteRenderer>() != null)
         {
-            block aux = new block();
-            aux.BlockTransform = theCollider.transform;
-            aux.marked = false;
-            blocksInCollider.Insert(0, aux);
+            blocksInCollider.Insert(0, theCollider.transform);
+            marks.Insert(0, false);
         }
     }
 
     void OnTriggerExit2D(Collider2D theCollider)
     {
         theCollider.GetComponent<SpriteRenderer>().color = Color.black;
-        block aux = new block();
-        aux.BlockTransform = theCollider.transform;
-        aux.marked = false;
-        blocksInCollider.Remove(aux);
+        int index = blocksInCollider.FindIndex(x => x == theCollider.transform);
+        blocksInCollider.RemoveAt(index);
+        marks.RemoveAt(index);
     }
 }
