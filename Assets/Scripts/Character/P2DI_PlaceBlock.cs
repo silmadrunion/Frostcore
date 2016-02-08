@@ -17,8 +17,8 @@ public class P2DI_PlaceBlock : MonoBehaviour {
 		Vector2 placePosition;
 		if (canPlace () == true)
 		{
-            placePosition.x = ((int)(positionClick.x / blockDimension.x) * blockDimension.x + blockDimension.x / 2);
-            placePosition.y = ((int)(positionClick.y / blockDimension.y) * blockDimension.y + blockDimension.y / 2);
+            placePosition.x = ((int)(positionClick.x / blockDimension.x) * blockDimension.x);
+            placePosition.y = ((int)(positionClick.y / blockDimension.y) * blockDimension.y);
 			Instantiate(block, placePosition, Quaternion.identity);
 		}
 	}
