@@ -51,7 +51,9 @@ public class P2D_Controller : MonoBehaviour
         {
             P2D_Animator.Instance.Attack();
 
+            if (canBreak)
                 _DestroyBlock.MiningStart();
+            if (canPlace)
                 _PlaceBlock.Place(block);
 
         }
