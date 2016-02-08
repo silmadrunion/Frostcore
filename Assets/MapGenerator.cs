@@ -513,10 +513,7 @@ public class MapGenerator : MonoBehaviour
         {
             for (int j = 0; j < height; j++)
             {
-                if (map[i, j] != 0)
-                {
-                    Instantiate(Resources.Load("Prefabs/" + map[i, j].ToString(), typeof(GameObject)), new Vector3((float)i / 2, (float)-j / 2), Quaternion.identity);
-                }
+                Instantiate(Resources.Load("Prefabs/" + map[i, j].ToString(), typeof(GameObject)), new Vector3((float)i / 2, (float)-j / 2), Quaternion.identity);
             }
         }
     }
