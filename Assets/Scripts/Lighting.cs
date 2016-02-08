@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -33,24 +32,23 @@ public class Lighting : MonoBehaviour
 
         for (int i = 0; i < blocksInCollider.Count; i++ )
         {
-            if (marks[i])
+            if (marks[i] == true)
                 continue;
-
+            
             try
             {
                 RaycastHit2D[] hit = Physics2D.RaycastAll(transform.position, blocksInCollider[i].position - transform.position, Vector3.Distance(transform.position, blocksInCollider[i].position), discrimination);
-                //Debug.DrawLine(transform.position, b.BlockTransform.position, Color.green, 1f);
+                //Debug.DrawLine(transform.position, blocksInCollider[i].position, Color.green, .1f);
                 int modifier = 0;
                 foreach (RaycastHit2D hitmark in hit)
                 {
                     int index;
                     for (index = i; index < blocksInCollider.Count; index++)
                     {
-                        if (marks[index])
-                            continue;
-                        if (blocksInCollider[index] == hitmark)
+                        if (blocksInCollider[index] == hitmark.transform)
                             break;
                     }
+                    marks[index] = true;
                     if (modifier <= Power)
                     {
                         if (blocksInCollider[index].tag == "Air")
@@ -67,10 +65,8 @@ public class Lighting : MonoBehaviour
                     }
                     else
                     {
-
+                        blocksInCollider[index].GetComponent<SpriteRenderer>().color = Color.black;
                     }
-
-                    marks[index] = true;
                 }
 
             }
