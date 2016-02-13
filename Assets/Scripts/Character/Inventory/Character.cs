@@ -70,7 +70,12 @@ public class Character : MonoBehaviour
             Weapons[i].transform.localScale = Weapon.equippedWeaponVersion.transform.localScale;
 
             if (i == ItemEquippedNR)
+            {
                 MakeItemActive(Weapons[i]);
+                if (P2D_Controller.Instance.ItemBeingHeld != null)
+                    Destroy(P2D_Controller.Instance.ItemBeingHeld.gameObject);
+                P2D_Controller.Instance.ItemBeingHeld = Weapons[i].transform;
+            }
             else
                 MakeItemInactive(Weapons[i]);
 

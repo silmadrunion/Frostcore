@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System.Collections;
-using System.Linq;
 using System.Collections.Generic;
 using System;
 
@@ -15,14 +14,10 @@ public class MapGenerator : MonoBehaviour
     [Range(0, 100)]
     public int randomFillPercent;
 
-    int[,] map;
+    [HideInInspector]
+    public int[,] map;
 
-    void Start()
-    {
-        GenerateMap();
-    }
-
-    void GenerateMap()
+    public void GenerateMap()
     {
         map = new int[width, height];
         RandomFillMap();
@@ -43,8 +38,6 @@ public class MapGenerator : MonoBehaviour
                     FindPropperItemFor(x, y);
             }
         }
-
-        Show();
     }
 
     void ProcessMap()
@@ -362,7 +355,7 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
-    void SmoothMap()
+    public void SmoothMap()
     {
         for (int x = 0; x < width; x++)
         {
@@ -507,16 +500,6 @@ public class MapGenerator : MonoBehaviour
     public Element[] Blocks;
     public Element[] Default;
 
-    void Show()
-    {
-        for (int i = 0; i < width; i++)
-        {
-            for (int j = 0; j < height; j++)
-            {
-                Instantiate(Resources.Load("Prefabs/" + map[i, j].ToString(), typeof(GameObject)), new Vector3((float)i / 2, (float)-j / 2), Quaternion.identity);
-            }
-        }
-    }
 
     void FillWithDefault()
     {

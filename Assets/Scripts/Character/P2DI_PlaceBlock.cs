@@ -8,9 +8,15 @@ public class P2DI_PlaceBlock : MonoBehaviour
     public Vector2 blockDimension;
     public LayerMask layerMask;
 
+    public float Range = 10f;
+
+    private LayerMask airMask;
+
     void Start()
     {
         _camera = Camera.main;
+
+        airMask = LayerMask.GetMask("Air"); 
     }
 
     public void Place(GameObject block)
@@ -23,6 +29,15 @@ public class P2DI_PlaceBlock : MonoBehaviour
             placePosition.x = ((int)(positionClick.x / blockDimension.x) * blockDimension.x);
             placePosition.y = ((int)(positionClick.y / blockDimension.y) * blockDimension.y);
             Instantiate(block, placePosition, Quaternion.identity);
+
+            GameObject objectHit = null;
+
+            try
+            {
+                objectHit = Physics2D.OverlapPoint(placePosition, airMask).gameObject;
+                Destroy(objectHit);
+            }
+            catch { }
         }
     }
 

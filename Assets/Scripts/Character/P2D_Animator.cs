@@ -19,6 +19,11 @@ public class P2D_Animator : MonoBehaviour
 
 	public void ImposedFixedUpdate() 
     {
+        if (moveSpeed < 0)
+            m_Animator.SetBool("GoingLeft", true);
+        else
+            m_Animator.SetBool("GoingLeft", false);
+
         moveSpeed = (moveSpeed < 0 ? moveSpeed *= -1 : moveSpeed);
 
         m_Animator.SetFloat("MoveSpeed", moveSpeed);
@@ -60,6 +65,21 @@ public class P2D_Animator : MonoBehaviour
     public void SetStateSprint(bool sprint)
     {
         m_Animator.SetBool("Sprint", sprint);
+    }
+
+    public void HoldGun(bool holdGun)
+    {
+        m_Animator.SetBool("HoldGun", holdGun);
+
+        if (holdGun)
+            ArmRotation.Instance.UpdateArmRotation();
+        else
+            ArmRotation.Instance.UpdateArmRotation(true);
+    }
+
+    public void FacingRight(bool Right)
+    {
+        m_Animator.SetBool("FacingRight", Right);
     }
 
     public void Attack(bool value = true)
