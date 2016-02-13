@@ -52,6 +52,7 @@ public class P2DI_DestroyBlock : MonoBehaviour
         if (_time >= _m_Resistance && _m_Resistance != 0)
         {
             Vector3 tempPos = _block.transform.position;
+            _block.SendMessage("DropItems", SendMessageOptions.DontRequireReceiver);
             Destroy(_block);
             Instantiate(Resources.Load("Prefabs/" + 0.ToString(), typeof(GameObject)), tempPos, Quaternion.identity);
         }

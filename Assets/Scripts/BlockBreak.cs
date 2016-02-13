@@ -14,6 +14,9 @@ public class BlockBreak : MonoBehaviour
 
     public void DropItems()
     {
-
+        foreach (GameObject g in Drop)
+        {
+            Instantiate(g, transform.position, transform.rotation);
+        }
     }
 }
