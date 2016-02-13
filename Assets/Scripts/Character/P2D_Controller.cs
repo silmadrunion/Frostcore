@@ -24,6 +24,7 @@ public class P2D_Controller : MonoBehaviour
 
     public Transform ItemHolderObject;
     public Transform ItemBeingHeld;
+    public int IndexOfItemBeingHeld;
 
     public bool canPlace = false;
     public bool canBreak = false;
@@ -47,9 +48,51 @@ public class P2D_Controller : MonoBehaviour
             isJumping = Input.GetButtonDown("Jump");
         }
 
+        P2D_Animator.Instance.FacingRight(P2D_Motor.Instance.FacingRight);
+
+        if(ItemBeingHeld != null)
+        {
+            if (ItemBeingHeld.GetComponent<MayBreak>() != null)
+            {
+                _DestroyBlock._speed = ItemBeingHeld.GetComponent<MayBreak>().Speed;
+                canBreak = true;
+                canPlace = false;
+                P2D_Animator.Instance.HoldGun(false);
+            }
+            else if (ItemBeingHeld.tag == "Breakable")
+            {
+                block = ItemBeingHeld.gameObject;
+                canPlace = true;
+                canBreak = false;
+                P2D_Animator.Instance.HoldGun(false);
+            }
+            else if(ItemBeingHeld.GetComponent<Weapon>() != null)
+            {
+                P2D_Animator.Instance.HoldGun(true);
+                canPlace = false;
+                canBreak = false;
+            }
+            else
+            {
+                canPlace = false;
+                canBreak = false;
+                P2D_Animator.Instance.HoldGun(false);
+            }
+        }
+        else
+        {
+            P2D_Animator.Instance.HoldGun(false);
+            canPlace = false;
+            canBreak = false;
+        }
+
         if (Input.GetButtonDown("Fire1"))
         {
-            P2D_Animator.Instance.Attack();
+            if (ItemBeingHeld != null)
+            {
+                if (ItemBeingHeld.GetComponent<Weapon>() == null)
+                    P2D_Animator.Instance.Attack();
+            }
 
             if (canBreak)
                 _DestroyBlock.MiningStart();
@@ -59,7 +102,11 @@ public class P2D_Controller : MonoBehaviour
         }
         else if (Input.GetButtonUp("Fire1"))
         {
-            P2D_Animator.Instance.Attack(false);
+            if (ItemBeingHeld != null)
+            {
+                if (ItemBeingHeld.GetComponent<Weapon>() == null)
+                    P2D_Animator.Instance.Attack(false);
+            }
 
             _DestroyBlock.MiningStop();
         }
@@ -112,7 +159,7 @@ public class P2D_Controller : MonoBehaviour
             Character.Instance.UpdateEquipment();
         }
 
-        if (!InventoryDisplay.displayInventory)
+        if (InventoryDisplay.displayInventory)
             return;
 
         int i = 0;
@@ -123,7 +170,10 @@ public class P2D_Controller : MonoBehaviour
                 if (Inventory.Instance.HotbarContents[i].GetComponent<Item>().isUsable)
                     Inventory.Instance.UseItem(Inventory.Instance.HotbarContents[i]);
                 else
-                    Inventory.Instance.EquipItem(Inventory.Instance.HotbarContents[i]);
+                {
+                    Inventory.Instance.EquipItem(Inventory.Instance.HotbarContents[i], i);
+                    IndexOfItemBeingHeld = i;
+                }
             }
             i++;
         }

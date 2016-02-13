@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using System;
@@ -15,7 +16,8 @@ public class Inventory : MonoBehaviour
     /// Non 'Item' objects that can be accesed by the player without opening the 'Inventory'
     /// </summary>
     public Transform[] HotbarContents;
-
+    public RectTransform[] HotbarIcons;
+    
     public RectTransform InventoryContents;
     public GameObject ItemRectangle;
 
@@ -133,17 +135,21 @@ public class Inventory : MonoBehaviour
         }
     }
     
-    public void EquipItem(Transform item)
+    public void EquipItem(Transform item, int index)
     {
         if (P2D_Controller.Instance.ItemBeingHeld != null)
         {
             Destroy(P2D_Controller.Instance.ItemBeingHeld.gameObject);
             P2D_Controller.Instance.ItemBeingHeld = null;
+            HotbarContents[P2D_Controller.Instance.IndexOfItemBeingHeld].GetComponent<Image>().color = Color.white;
         }
-
-        GameObject clone = Instantiate(item, Vector3.zero, Quaternion.identity) as GameObject;
-        clone.transform.parent = P2D_Controller.Instance.ItemHolderObject;
+        GameObject clone = new GameObject();
+        clone = Instantiate(item.gameObject, Vector3.zero, Quaternion.identity) as GameObject;
+        clone.transform.SetParent(P2D_Controller.Instance.ItemHolderObject, false);
+        clone.SetActive(true);
         P2D_Controller.Instance.ItemBeingHeld = item;
+
+        HotbarContents[index].GetComponent<Image>().color = Color.red;
     }
 
     public void UseItem(Transform item)
