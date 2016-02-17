@@ -86,7 +86,7 @@ public class Player : MonoBehaviour
         Instance = this;
     }
 
-    void Start() 
+    public void Start() 
     {
         pStats.ResetHP();
         pStats.ResetTemperature();

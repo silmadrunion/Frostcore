@@ -89,6 +89,11 @@ public class InventoryDisplay : MonoBehaviour
         }
     }
 
+    void Start()
+    {
+        UpdateInventoryList();
+    }
+
     //Update the inv list
     public void UpdateInventoryList()
     {

@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections;
-using UnityEditor;
 
 public enum InventoryEquipSlot
 {
@@ -25,22 +24,22 @@ public class Item : MonoBehaviour
     public bool isUsable;
     public float Weight = 0; // Mass of this (1 item, multiple stacks have this multiplied by stacks). (in kg damn 'muricans)
     public bool stackable = false; //Is it stackable? If yes then items with the same itemType will be stacked.
-    public int maxStack= 0; //How many Items each stack can have before creating a new one. Remember that the Items that should be stacked should have the same itemType.
+    public int maxStack = 0; //How many Items each stack can have before creating a new one. Remember that the Items that should be stacked should have the same itemType.
     public int stack = 0; //This is how many stack counts this Item will take up.
-    
+
     public InventoryEquipSlot EquipSlot;
 
     public MeleeTypes MeleeType;
 
     public RangedTypes RangedType;
-    
+
     //This is the object we will instantiate in the Players hand.
     //We use this so we can have two versions of the weapon. One for picking up and one for using.
     public GameObject equippedWeaponVersion;
+    public GameObject itemPlacement;
 
     //These will store information about usefull components.
     public EquipmentEffect equipmentEffect;
-    static Inventory playersinv;
 
     private bool FPPickUpFound = false;
 
@@ -49,28 +48,18 @@ public class Item : MonoBehaviour
     //Here we find the components we need.
     void Awake()
     {
-        playersinv = FindObjectOfType(typeof(Inventory)) as Inventory; //finding the players inv.
-        if (playersinv == null)
-        {
-            canGet = false;
-            Debug.LogWarning("No 'Inventory' found in game. The Item " + transform.name + " has been disabled for pickup (canGet = false).");
-        }
-        else
-        {
-            gameObject.SendMessage("RetrievePlayer", playersinv, SendMessageOptions.DontRequireReceiver);
-        }
-
         if (GetComponent<EquipmentEffect>())
         {
             equipmentEffect = GetComponent<EquipmentEffect>();
         }
     }
 
-    void Start()
+    void Update()
     {
-        if (EquipSlot != InventoryEquipSlot.NonEquippable)
-            if(equippedWeaponVersion == null)
-            Debug.LogError("No equipped weapon version");
+        if (GameMaster.gm.HasGameStarted)
+            return;
+        else
+            GetComponent<Rigidbody2D>().velocity = Vector2.zero;
     }
 
     //Picking up the Item.
@@ -80,10 +69,10 @@ public class Item : MonoBehaviour
         if (canGet)
         {//if its getable or hasnt been gotten.
             Item locatedit = null;
-            playersinv.gameObject.SendMessage("PlayPickUpSound", SendMessageOptions.DontRequireReceiver); //Play sound
+            Inventory.Instance.gameObject.SendMessage("PlayPickUpSound", SendMessageOptions.DontRequireReceiver); //Play sound
             if (stackable)
             {
-                foreach (Transform t in playersinv.Contents)
+                foreach (Transform t in Inventory.Instance.Contents)
                 {
                     if (t != null)
                     {
@@ -106,14 +95,16 @@ public class Item : MonoBehaviour
                         Player.Instance.pStats.CarryWeight += Weight * stack;
                         InventoryDisplay.Instance.UpdateInventoryList();
                         Destroy(this.gameObject);
+                        MoveToPlayer();
                     }
                     else if (Player.Instance.pStats.CarryWeight + Weight * stack <= Player.Instance.pStats.MaxCarryWeight)
                     {
                         stack -= locatedit.maxStack - locatedit.stack;
                         locatedit.stack = locatedit.maxStack;
-                        playersinv.AddItem(this.transform);
-                        MoveMeToThePlayer(playersinv.itemHolderObject);
+                        Inventory.Instance.AddItem(this.transform);
+                        MoveMeToThePlayer(Inventory.Instance.itemHolderObject);
                         Player.Instance.pStats.CarryWeight += Weight * stack;
+                        MoveToPlayer();
                     }
                     else if (Player.Instance.pStats.CarryWeight + Weight <= Player.Instance.pStats.MaxCarryWeight)
                     {
@@ -126,10 +117,11 @@ public class Item : MonoBehaviour
                         {
                             stack -= locatedit.maxStack - locatedit.stack;
                             locatedit.stack = locatedit.maxStack;
-                            MoveMeToThePlayer(playersinv.itemHolderObject);
-                            playersinv.AddItem(this.transform);
+                            MoveMeToThePlayer(Inventory.Instance.itemHolderObject);
+                            Inventory.Instance.AddItem(this.transform);
                         }
                         Player.Instance.pStats.CarryWeight += Weight * (int)((Player.Instance.pStats.MaxCarryWeight - Player.Instance.pStats.CarryWeight) / Weight);
+                        MoveToPlayer();
                     }
                     else
                     {
@@ -145,23 +137,34 @@ public class Item : MonoBehaviour
             if (getit && Player.Instance.pStats.CarryWeight + Weight * stack <= Player.Instance.pStats.MaxCarryWeight)
             {
                 // Chuck it in the inventory
-                playersinv.AddItem(this.transform);
-                MoveMeToThePlayer(playersinv.itemHolderObject);//moves the object, to the player
+                Inventory.Instance.AddItem(this.transform);
+                MoveMeToThePlayer(Inventory.Instance.itemHolderObject);//moves the object, to the player
+                MoveToPlayer();
             }
             else if (getit && Player.Instance.pStats.CarryWeight + Weight <= Player.Instance.pStats.MaxCarryWeight)
             {
                 Transform clone = Instantiate(gameObject, transform.position, transform.rotation) as Transform;
                 clone.GetComponent<Item>().stack -= (int)((Player.Instance.pStats.MaxCarryWeight - Player.Instance.pStats.CarryWeight) / Weight);
                 Player.Instance.pStats.CarryWeight += Weight * (int)((Player.Instance.pStats.MaxCarryWeight - Player.Instance.pStats.CarryWeight) / Weight);
-                stack -= (int) Weight * (int)((Player.Instance.pStats.MaxCarryWeight - Player.Instance.pStats.CarryWeight) / Weight);
+                stack -= (int)Weight * (int)((Player.Instance.pStats.MaxCarryWeight - Player.Instance.pStats.CarryWeight) / Weight);
 
-                playersinv.AddItem(clone);
+                Inventory.Instance.AddItem(clone);
+
+                MoveToPlayer();
             }
             else if (getit)
             {
                 Debug.Log("Inventory is full");
             }
         }
+    }
+
+    public void MoveToPlayer()
+    {
+        if (GetComponent<Rigidbody2D>() == null)
+            return;
+
+        GetComponent<Rigidbody2D>().velocity = (Inventory.Instance.transform.parent.position - transform.position).normalized * 10;
     }
 
     //Moves the item to the Players 'itemHolderObject' and disables it. In most cases this will just be the Inventory object.
@@ -208,48 +211,23 @@ public class Item : MonoBehaviour
         transform.FindChild("ItemPickUp").gameObject.SetActive(true);
     }
 
+    public IEnumerator DelayPickUp()
+    {
+        if (transform.FindChild("ItemPickUp").GetComponent<Collider>() != null && Inventory.Instance.transform.parent.GetComponent<Collider>() != null)
+        {
+            Physics.IgnoreCollision(Inventory.Instance.transform.parent.GetComponent<Collider>(), transform.FindChild("ItemPickUp").GetComponent<Collider>(), true);
+            yield return new WaitForSeconds(1);
+            Physics.IgnoreCollision(Inventory.Instance.transform.parent.GetComponent<Collider>(), transform.FindChild("ItemPickUp").GetComponent<Collider>(), false);
+        }
+    }
+
     IEnumerator DelayPhysics()
     {
-        if (playersinv.transform.parent.GetComponent<Collider>() != null && GetComponent<Collider>() != null)
+        if (Inventory.Instance.transform.parent.GetComponent<Collider>() != null && GetComponent<Collider>() != null)
         {
-            Physics.IgnoreCollision(playersinv.transform.parent.GetComponent<Collider>(), GetComponent<Collider>(), true);
+            Physics.IgnoreCollision(Inventory.Instance.transform.parent.GetComponent<Collider>(), GetComponent<Collider>(), true);
             yield return new WaitForSeconds(1);
-            Physics.IgnoreCollision(playersinv.transform.parent.GetComponent<Collider>(), GetComponent<Collider>(), false);
+            Physics.IgnoreCollision(Inventory.Instance.transform.parent.GetComponent<Collider>(), GetComponent<Collider>(), false);
         }
     }
-}
-
-[CustomEditor(typeof(Item))]
-public class ItemEditor: Editor
-{
-    public override void OnInspectorGUI()
-    {
-        Item myTarget = (Item)target;
-
-        myTarget.EquipSlot = (InventoryEquipSlot)EditorGUILayout.EnumPopup("EquipSlot: ", myTarget.EquipSlot);
-        myTarget.itemIcon = (Sprite)EditorGUILayout.ObjectField("Item Icon", myTarget.itemIcon, typeof(Sprite));
-
-        myTarget.canGet = EditorGUILayout.Toggle("Can Pick Up Item? ", myTarget.canGet);
-
-        myTarget.Weight = EditorGUILayout.FloatField("Weight: ", myTarget.Weight);
-
-        if (myTarget.EquipSlot == InventoryEquipSlot.NonEquippable)
-        {
-            myTarget.isUsable = EditorGUILayout.Toggle("Usable: ", myTarget.isUsable);
-
-            myTarget.stackable = EditorGUILayout.Toggle("Stackable", myTarget.stackable);
-
-            if (myTarget.stackable)
-            {
-                myTarget.maxStack = EditorGUILayout.IntField("Max Stack: ", myTarget.maxStack);
-                myTarget.stack = EditorGUILayout.IntField("Stack: ", myTarget.stack);
-            }
-        }
-
-        else
-        {
-            myTarget.equippedWeaponVersion = (GameObject)EditorGUILayout.ObjectField("Equipped Weapon Version: ", myTarget.equippedWeaponVersion, typeof(GameObject));
-        }
-    }
-
 }

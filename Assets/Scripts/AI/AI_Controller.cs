@@ -121,6 +121,9 @@ public class AI_Controller : MonoBehaviour
             return;
         }
 
+        if (path == null)
+            return;
+
         if (currentWaypoint >= path.vectorPath.Count)
         {
             if (pathIsEnded)

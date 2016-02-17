@@ -71,7 +71,7 @@ public class Weapon : MonoBehaviour
 
             if(hit.collider == null)
             {
-                hitPos = (mousePosition - firePointPosition) * 30;
+                hitPos = (mousePosition - firePointPosition) * 90;
                 hitNormal = new Vector3(9999, 9999, 9999);
             }
             else

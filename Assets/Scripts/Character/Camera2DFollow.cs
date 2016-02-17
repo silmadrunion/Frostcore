@@ -28,6 +28,9 @@ public class Camera2DFollow : MonoBehaviour
     // Use this for initialization
     private void Start()
     {
+        if (target == null)
+            FindPlayer();
+
         m_LastTargetPosition = target.position;
         m_OffsetZ = (transform.position - target.position).z;
     }
