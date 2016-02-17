@@ -36,7 +36,7 @@ TextureImporter:
   serializedVersion: 2
   mipmaps:
     mipMapMode: 0
-    enableMipMap: 1
+    enableMipMap: 0
     linearTexture: 0
     correctGamma: 0
     fadeOut: 0
@@ -46,7 +46,7 @@ TextureImporter:
   bumpmap:
     convertToNormalMap: 0
     externalNormalMap: 0
-    heightScale: .25
+    heightScale: 0.25
     normalMapFilter: 0
   isReadable: 0
   grayScaleToAlpha: 0
@@ -71,7 +71,7 @@ TextureImporter:
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
-  spritePivot: {x: .5, y: .5}
+  spritePivot: {x: 0.5, y: 0.5}
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spritePixelsToUnits: 100
   alphaIsTransparency: 1
@@ -89,6 +89,11 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -32, y: 32}
+        - {x: -32, y: -32}
+        - {x: 32, y: -32}
+        - {x: 32, y: 32}
     - name: AllMinerals_1
       rect:
         serializedVersion: 2
@@ -99,6 +104,16 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -31.5, y: 29}
+        - {x: -31.5, y: 24}
+        - {x: -28.5, y: 20}
+        - {x: -31.5, y: -1}
+        - {x: -31.5, y: -21}
+        - {x: -19.5, y: -29}
+        - {x: 12.5, y: -29}
+        - {x: 31.5, y: -16}
+        - {x: 31.5, y: 29}
     - name: AllMinerals_2
       rect:
         serializedVersion: 2
@@ -109,6 +124,11 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -32, y: 32}
+        - {x: -32, y: -32}
+        - {x: 32, y: -32}
+        - {x: 32, y: 32}
     - name: AllMinerals_3
       rect:
         serializedVersion: 2
@@ -119,6 +139,13 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -31.5, y: 21.5}
+        - {x: -31.5, y: 11.5}
+        - {x: -10.5, y: -17.5}
+        - {x: 8.5, y: -21.5}
+        - {x: 31.5, y: -21.5}
+        - {x: 31.5, y: 21.5}
     - name: AllMinerals_4
       rect:
         serializedVersion: 2
@@ -129,6 +156,11 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -32, y: 32}
+        - {x: -32, y: -32}
+        - {x: 32, y: -32}
+        - {x: 32, y: 32}
     - name: AllMinerals_5
       rect:
         serializedVersion: 2
@@ -139,6 +171,13 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -32, y: 20}
+        - {x: -32, y: 0}
+        - {x: -17, y: -17}
+        - {x: 6, y: -20}
+        - {x: 32, y: -20}
+        - {x: 32, y: 20}
     - name: AllMinerals_6
       rect:
         serializedVersion: 2
@@ -149,6 +188,21 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: 30.5, y: -17.5}
+        - {x: 30.5, y: 8.5}
+        - {x: 23.5, y: 29.5}
+        - {x: -4.5, y: 29.5}
+        - {x: -3.5, y: 25.5}
+        - {x: -0.5, y: 19.5}
+        - {x: 1.5, y: 17.5}
+        - {x: -13.5, y: 29.5}
+        - {x: -26.5, y: 29.5}
+        - {x: -30.5, y: 27.5}
+        - {x: -30.5, y: -29.5}
+        - {x: 30.5, y: -29.5}
+        - {x: 30.5, y: -23.5}
+        - {x: 27.5, y: -19.5}
     - name: AllMinerals_7
       rect:
         serializedVersion: 2
@@ -159,6 +213,13 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -32, y: 29}
+        - {x: -32, y: -29}
+        - {x: 15, y: -29}
+        - {x: 29, y: -18}
+        - {x: 32, y: -11}
+        - {x: 32, y: 29}
     - name: AllMinerals_8
       rect:
         serializedVersion: 2
@@ -169,6 +230,12 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -30.5, y: 28.5}
+        - {x: -30.5, y: -28.5}
+        - {x: 30.5, y: -28.5}
+        - {x: 30.5, y: -8.5}
+        - {x: -2.5, y: 28.5}
     - name: AllMinerals_9
       rect:
         serializedVersion: 2
@@ -179,6 +246,12 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -32, y: 22.5}
+        - {x: -32, y: -22.5}
+        - {x: -10, y: -22.5}
+        - {x: 32, y: 4.5}
+        - {x: 32, y: 22.5}
     - name: AllMinerals_10
       rect:
         serializedVersion: 2
@@ -189,6 +262,13 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -19.5, y: 26}
+        - {x: -22.5, y: 26}
+        - {x: -22.5, y: -26}
+        - {x: 22.5, y: -26}
+        - {x: 22.5, y: -21}
+        - {x: -0.5, y: 7}
     - name: AllMinerals_11
       rect:
         serializedVersion: 2
@@ -199,6 +279,12 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -32, y: 23}
+        - {x: -32, y: -23}
+        - {x: 5, y: -23}
+        - {x: 32, y: 7}
+        - {x: 32, y: 23}
     - name: AllMinerals_12
       rect:
         serializedVersion: 2
@@ -209,6 +295,21 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -21, y: 26.5}
+        - {x: -30, y: -4.5}
+        - {x: -32, y: -19.5}
+        - {x: -32, y: -26.5}
+        - {x: 32, y: -26.5}
+        - {x: 32, y: 26.5}
+      - - {x: -26, y: 19.5}
+        - {x: -28, y: 18.5}
+        - {x: -28, y: 13.5}
+        - {x: -26, y: 12.5}
+        - {x: -22, y: 12.5}
+        - {x: -21, y: 15.5}
+        - {x: -21, y: 18.5}
+        - {x: -22, y: 19.5}
     - name: AllMinerals_13
       rect:
         serializedVersion: 2
@@ -219,6 +320,15 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: 11, y: 26}
+        - {x: 10, y: 24}
+        - {x: 8, y: 15}
+        - {x: -22, y: 1}
+        - {x: -32, y: -19}
+        - {x: -32, y: -26}
+        - {x: 32, y: -26}
+        - {x: 32, y: 26}
     - name: AllMinerals_14
       rect:
         serializedVersion: 2
@@ -229,6 +339,13 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -28.5, y: -21}
+        - {x: -28.5, y: -26}
+        - {x: 28.5, y: -26}
+        - {x: 28.5, y: 26}
+        - {x: 15.5, y: 26}
+        - {x: 8.5, y: 25}
     - name: AllMinerals_15
       rect:
         serializedVersion: 2
@@ -239,6 +356,11 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -32, y: 32}
+        - {x: -32, y: -32}
+        - {x: 32, y: -32}
+        - {x: 32, y: 32}
     - name: AllMinerals_16
       rect:
         serializedVersion: 2
@@ -249,6 +371,15 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: 31.5, y: 27.5}
+        - {x: -31.5, y: 27.5}
+        - {x: -31.5, y: -14.5}
+        - {x: -27.5, y: -27.5}
+        - {x: 11.5, y: -27.5}
+        - {x: 12.5, y: -24.5}
+        - {x: 20.5, y: -22.5}
+        - {x: 31.5, y: -17.5}
     - name: AllMinerals_17
       rect:
         serializedVersion: 2
@@ -259,6 +390,11 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -32, y: 32}
+        - {x: -32, y: -32}
+        - {x: 32, y: -32}
+        - {x: 32, y: 32}
     - name: AllMinerals_18
       rect:
         serializedVersion: 2
@@ -269,6 +405,13 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -31.5, y: 25.5}
+        - {x: -31.5, y: 10.5}
+        - {x: -19.5, y: -16.5}
+        - {x: -9.5, y: -25.5}
+        - {x: 31.5, y: -25.5}
+        - {x: 31.5, y: 25.5}
     - name: AllMinerals_19
       rect:
         serializedVersion: 2
@@ -279,6 +422,11 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -32, y: 32}
+        - {x: -32, y: -32}
+        - {x: 32, y: -32}
+        - {x: 32, y: 32}
     - name: AllMinerals_20
       rect:
         serializedVersion: 2
@@ -289,6 +437,25 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -9.5, y: 28.5}
+        - {x: -9.5, y: 27.5}
+        - {x: -7.5, y: 23.5}
+        - {x: -11.5, y: 28.5}
+        - {x: -29.5, y: 28.5}
+        - {x: -30.5, y: 26.5}
+        - {x: -30.5, y: -28.5}
+        - {x: 30.5, y: -28.5}
+        - {x: 30.5, y: 6.5}
+        - {x: 25.5, y: 28.5}
+      - - {x: 21.5, y: 0.5}
+        - {x: 19.5, y: -3.5}
+        - {x: 18.5, y: -7.5}
+        - {x: 18.5, y: -13.5}
+        - {x: 22.5, y: -13.5}
+        - {x: 26.5, y: -9.5}
+        - {x: 26.5, y: -1.5}
+        - {x: 24.5, y: 0.5}
     - name: AllMinerals_21
       rect:
         serializedVersion: 2
@@ -299,6 +466,7 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
     - name: AllMinerals_22
       rect:
         serializedVersion: 2
@@ -309,6 +477,14 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -32, y: 27.5}
+        - {x: -32, y: -20.5}
+        - {x: -25, y: -27.5}
+        - {x: 24, y: -27.5}
+        - {x: 29, y: -17.5}
+        - {x: 32, y: 2.5}
+        - {x: 32, y: 27.5}
     - name: AllMinerals_23
       rect:
         serializedVersion: 2
@@ -319,6 +495,19 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -26.5, y: 31}
+        - {x: -30.5, y: 29}
+        - {x: -30.5, y: -31}
+        - {x: 30.5, y: -31}
+        - {x: 30.5, y: 24}
+        - {x: 29.5, y: 31}
+      - - {x: 13.5, y: 0}
+        - {x: 13.5, y: -7}
+        - {x: 21.5, y: -7}
+        - {x: 22.5, y: -5}
+        - {x: 21.5, y: -2}
+        - {x: 17.5, y: 0}
     - name: AllMinerals_24
       rect:
         serializedVersion: 2
@@ -329,6 +518,13 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -32, y: 25.5}
+        - {x: -32, y: -25.5}
+        - {x: 12, y: -25.5}
+        - {x: 28, y: -13.5}
+        - {x: 32, y: 5.5}
+        - {x: 32, y: 25.5}
     - name: AllMinerals_25
       rect:
         serializedVersion: 2
@@ -339,6 +535,12 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -30.5, y: 28.5}
+        - {x: -30.5, y: -28.5}
+        - {x: 30.5, y: -28.5}
+        - {x: 30.5, y: -8.5}
+        - {x: -2.5, y: 28.5}
     - name: AllMinerals_26
       rect:
         serializedVersion: 2
@@ -349,6 +551,17 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -10, y: 29}
+        - {x: -11, y: 27}
+        - {x: -9, y: 23}
+        - {x: -13, y: 27}
+        - {x: -22, y: 27}
+        - {x: -32, y: 15}
+        - {x: -32, y: -29}
+        - {x: 32, y: -29}
+        - {x: 32, y: 26}
+        - {x: 24, y: 29}
     - name: AllMinerals_27
       rect:
         serializedVersion: 2
@@ -359,6 +572,14 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -27, y: 31}
+        - {x: -28, y: 27}
+        - {x: -32, y: -3}
+        - {x: -32, y: -31}
+        - {x: 32, y: -31}
+        - {x: 32, y: 25}
+        - {x: 22, y: 31}
     - name: AllMinerals_28
       rect:
         serializedVersion: 2
@@ -369,6 +590,16 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: 11, y: 26}
+        - {x: 10, y: 24}
+        - {x: 8, y: 15}
+        - {x: -22, y: 1}
+        - {x: -32, y: -19}
+        - {x: -32, y: -26}
+        - {x: 32, y: -26}
+        - {x: 32, y: 26}
+    outline: []
   spritePackingTag: 
   userData: 
   assetBundleName: 

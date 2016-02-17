@@ -16,7 +16,11 @@ public class BlockBreak : MonoBehaviour
     {
         foreach (GameObject g in Drop)
         {
-            Instantiate(g, transform.position, transform.rotation);
+            GameObject clone = Instantiate(g, transform.position, transform.rotation) as GameObject;
+
+            clone.name = g.name;
+            if (g.GetComponent<Item>() != null)
+                StartCoroutine(g.GetComponent<Item>().MakeItPickable());
         }
     }
 }

@@ -134,20 +134,25 @@ public class Inventory : MonoBehaviour
             Debug.Log(item.name + " has been dropped");
         }
     }
-    
+
     public void EquipItem(Transform item, int index)
     {
+        if (item.GetComponent<Item>().equippedWeaponVersion == null)
+            return;
+
         if (P2D_Controller.Instance.ItemBeingHeld != null)
         {
             Destroy(P2D_Controller.Instance.ItemBeingHeld.gameObject);
             P2D_Controller.Instance.ItemBeingHeld = null;
-            HotbarContents[P2D_Controller.Instance.IndexOfItemBeingHeld].GetComponent<Image>().color = Color.white;
+
+            if (HotbarContents[P2D_Controller.Instance.IndexOfItemBeingHeld].GetComponent<Image>() != null)
+                HotbarContents[P2D_Controller.Instance.IndexOfItemBeingHeld].GetComponent<Image>().color = Color.white;
         }
         GameObject clone = new GameObject();
-        clone = Instantiate(item.gameObject, Vector3.zero, Quaternion.identity) as GameObject;
+        clone = Instantiate(item.GetComponent<Item>().equippedWeaponVersion.gameObject, Vector3.zero, Quaternion.identity) as GameObject;
         clone.transform.SetParent(P2D_Controller.Instance.ItemHolderObject, false);
         clone.SetActive(true);
-        P2D_Controller.Instance.ItemBeingHeld = item;
+        P2D_Controller.Instance.ItemBeingHeld = clone.transform;
 
         HotbarContents[index].GetComponent<Image>().color = Color.red;
     }

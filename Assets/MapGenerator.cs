@@ -513,14 +513,9 @@ public class MapGenerator : MonoBehaviour
                 Element possibleElementFound = new Element();
                 foreach (Element d in Default)
                 {
-                    if(y > d.MinDepth && y < d.MaxDepth)
+                    if (y > d.MinDepth && y < d.MaxDepth)
                     {
-                        if (possibleElementFound.SourceId != 0)
-                            possibleElementFound = d;
-                        else
-                        {
-                            possibleElementFound = (pseudoRandom.Next(0, 100) > 50) ? d : possibleElementFound;
-                        }
+                        possibleElementFound = d;
                     }
                 }
 

@@ -61,7 +61,7 @@ public class P2D_Controller : MonoBehaviour
             }
             else if (ItemBeingHeld.tag == "Breakable")
             {
-                block = ItemBeingHeld.gameObject;
+                block = ItemBeingHeld.GetComponent<Item>().itemPlacement;
                 canPlace = true;
                 canBreak = false;
                 P2D_Animator.Instance.HoldGun(false);
@@ -97,7 +97,16 @@ public class P2D_Controller : MonoBehaviour
             if (canBreak)
                 _DestroyBlock.MiningStart();
             if (canPlace)
+            {
                 _PlaceBlock.Place(block);
+                Inventory.Instance.HotbarContents[IndexOfItemBeingHeld].GetComponent<Item>().stack--;
+                if (Inventory.Instance.HotbarContents[IndexOfItemBeingHeld].GetComponent<Item>().stack == 0)
+                {
+                    Destroy(Inventory.Instance.HotbarContents[IndexOfItemBeingHeld].gameObject);
+                    block = null;
+                    Destroy(ItemBeingHeld.gameObject);
+                }
+            }
 
         }
         else if (Input.GetButtonUp("Fire1"))

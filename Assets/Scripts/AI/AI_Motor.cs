@@ -10,7 +10,7 @@ public class AI_Motor : MonoBehaviour
     [SerializeField] private LayerMask m_WhatIsGround;          // A mask determining what is ground to the character.
 
     private Transform GroundCheck;      // A position marking where to check if the player is grounded.
-    const float GroundedRadius = .4f;   // Radius of the overlap circle to determine if grounded.
+    const float GroundedRadius = 1f;   // Radius of the overlap circle to determine if grounded.
     private bool Grounded;              // Whether or not the player is grounded.
     private Transform CeilingCheck;     // A position marking where to check for ceilings.
     const float CeilingRadius = .01f;   // Radius of the overlap circle to determine if the player can stand up.
