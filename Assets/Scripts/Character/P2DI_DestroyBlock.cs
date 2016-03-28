@@ -53,8 +53,23 @@ public class P2DI_DestroyBlock : MonoBehaviour
         {
             Vector3 tempPos = _block.transform.position;
             _block.SendMessage("DropItems", SendMessageOptions.DontRequireReceiver);
-            Destroy(_block);
-            Instantiate(Resources.Load("Prefabs/" + 0.ToString(), typeof(GameObject)), tempPos, Quaternion.identity);
+
+            Vector2 destroyPos;
+            destroyPos.x = (int)(_block.transform.position.x * 2);
+            destroyPos.y = (int)(_block.transform.position.y * 2);
+
+            if (destroyPos.y >= 0)
+                destroyPos.y = GameMaster.gm.mapGen.height - destroyPos.y;
+            else
+            {
+                destroyPos.y *= -1;
+                destroyPos.y += GameMaster.gm.mapGen.height;
+            }
+
+            GameMaster.gm.Map[(int)destroyPos.x][(int)destroyPos.y].id = 0;
+            Destroy(GameMaster.gm.Map[(int)destroyPos.x][(int)destroyPos.y].clone);
+            GameMaster.gm.Map[(int)destroyPos.x][(int)destroyPos.y].clone = null;
+            GameMaster.gm.Map[(int)destroyPos.x][(int)destroyPos.y].shown = false;
         }
     }
 
