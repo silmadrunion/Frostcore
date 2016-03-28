@@ -71,8 +71,8 @@ public class InventoryDisplay : MonoBehaviour
 
         for (int i = 0; i < 6; i++)
         {
-            ItemIcons[i].GetChild(0).GetComponent<Image>().sprite = NullItemIcon;
-            ItemIcons[i].GetChild(1).GetComponent<Text>().text = " ";
+            ItemIcons[i].GetChild(1).GetComponent<Image>().sprite = NullItemIcon;
+            ItemIcons[i].GetChild(2).GetComponent<Text>().text = " ";
 
             ItemIcons[i].gameObject.SetActive(false);
         }
@@ -113,13 +113,13 @@ public class InventoryDisplay : MonoBehaviour
         {
             if (i >= CurrentPage * 6 - 6 && i <= CurrentPage * 6 - 1)
             {
-                ItemIcons[i % 6].GetChild(0).GetComponent<Image>().sprite = Content.GetComponent<Item>().itemIcon;
-                ItemIcons[i % 6].GetChild(1).GetComponent<Text>().text = Content.name;
+                ItemIcons[i % 6].GetChild(1).GetComponent<Image>().sprite = Content.GetComponent<Item>().itemIcon;
+                ItemIcons[i % 6].GetChild(2).GetComponent<Text>().text = Content.name;
 
                 if (Content.GetComponent<Item>().stackable)
-                    ItemIcons[i % 6].GetChild(2).GetComponent<Text>().text = "x " + Content.GetComponent<Item>().stack;
+                    ItemIcons[i % 6].GetChild(3).GetComponent<Text>().text = "x " + Content.GetComponent<Item>().stack;
                 else
-                    ItemIcons[i % 6].GetChild(2).GetComponent<Text>().text = null;
+                    ItemIcons[i % 6].GetChild(3).GetComponent<Text>().text = null;
                 ItemIcons[i % 6].GetComponent<ItemIcon>().CorrespondingItem = Content;
                 ItemIcons[i % 6].GetComponent<ItemIcon>().CorrespondingItemPosInContents = i;
 
@@ -146,36 +146,6 @@ public class InventoryDisplay : MonoBehaviour
 
     void Update()
     {
-        CarryWeightBar.GetComponent<Image>().fillAmount = Player.Instance.pStats.CarryWeight / Player.Instance.pStats.MaxCarryWeight;
-
-        Vector2 mousePos = Input.mousePosition;
-
-        if (Input.GetMouseButtonDown(0))
-        {
-            if (mousePos.x > Inventory.position.x && mousePos.y < Inventory.position.y &&
-                mousePos.x < Inventory.position.x + Inventory.rect.width + HotBar.rect.width && mousePos.y > Inventory.position.y - Inventory.rect.height * 5 / 6)
-            {
-
-            }
-            else
-            {
-                // DROP ITEM
-                try
-                {
-                    associatedInventory.DropItem(itemBeingDragged.rectTransform.transform.parent.GetComponent<ItemIcon>().CorrespondingItem.GetComponent<Item>());
-                }
-                catch { };
-            }
-        }
-        if (Input.GetKeyDown(KeyCode.Escape)) //Pressed escape
-        {
-            ClearDraggedItem(); //Get rid of the dragged item.
-        }
-        if (Input.GetMouseButtonDown(1)) //Pressed right mouse
-        {
-            ClearDraggedItem(); //Get rid of the dragged item.
-        }
-
         //Turn the Inventory on and off and handle audio + pausing the game.
         if (Input.GetKeyDown(onOffButton))
         {
@@ -194,6 +164,63 @@ public class InventoryDisplay : MonoBehaviour
                 gameObject.SendMessage("ChangedState", true, SendMessageOptions.DontRequireReceiver);
                 gameObject.SendMessage("PauseGame", true, SendMessageOptions.DontRequireReceiver); //PauseGame/DisableMouse/HideMouse
             }
+        }
+
+        if (!displayInventory)
+            return;
+
+        CarryWeightBar.GetComponent<Image>().fillAmount = Player.Instance.pStats.CarryWeight / Player.Instance.pStats.MaxCarryWeight;
+
+        Vector2 mousePos = Input.mousePosition;
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            if (mousePos.x > Inventory.position.x && mousePos.y < Inventory.position.y &&
+                mousePos.x < Inventory.position.x + Inventory.rect.width + HotBar.rect.width && mousePos.y > Inventory.position.y - Inventory.rect.height * 5 / 6)
+            {
+                foreach (RectTransform icon in ItemIcons)
+                {
+                    if (mousePos.x > icon.position.x && mousePos.y < icon.position.y && 
+                        mousePos.x < icon.position.x + icon.rect.width && mousePos.y > icon.position.y - icon.rect.height)
+                    {
+                        icon.GetComponent<ItemIcon>().DragItem();
+                        icon.GetComponent<ItemIcon>().ClearDraggedItem();
+                    }
+                }
+            }
+            else
+            {
+                // DROP ITEM
+                try
+                {
+                    associatedInventory.DropItem(itemBeingDragged.rectTransform.transform.parent.GetComponent<ItemIcon>().CorrespondingItem.GetComponent<Item>());
+                }
+                catch { };
+            }
+        }
+
+        if (mousePos.x > Inventory.position.x && mousePos.y < Inventory.position.y &&
+            mousePos.x < Inventory.position.x + Inventory.rect.width + HotBar.rect.width && mousePos.y > Inventory.position.y - Inventory.rect.height * 5 / 6)
+        {
+            foreach (RectTransform icon in ItemIcons)
+            {
+                var itembackground = icon.GetChild(0).GetComponent<Image>();
+
+                itembackground.color = new Color(1, 1, 1, itembackground.color.a - 0.08f);
+
+                if (mousePos.x > icon.position.x && mousePos.y < icon.position.y &&
+                    mousePos.x < icon.position.x + icon.rect.width && mousePos.y > icon.position.y - icon.rect.height)
+                    itembackground.color = Color.white;
+            }
+        }
+
+        if (Input.GetKeyDown(KeyCode.Escape)) //Pressed escape
+        {
+            ClearDraggedItem(); //Get rid of the dragged item.
+        }
+        if (Input.GetMouseButtonDown(1)) //Pressed right mouse
+        {
+            ClearDraggedItem(); //Get rid of the dragged item.
         }
 
         //Making the dragged icon update its position

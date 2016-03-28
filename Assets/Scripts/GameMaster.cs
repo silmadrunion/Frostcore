@@ -42,16 +42,18 @@ public class GameMaster : MonoBehaviour {
     bool isMenuActive = false;
 
     public GameObject LoadingScreen;
+    public bool gameIsStarting = false;
+    public bool Generating;
+    public int numberOfGens = 0;
 
-    MapGenerator mapGen;
-    public int blocksPerChunkSide = 20;
-    public int Offset;
-    public List<List<GameObject>> chunks;
+    public MapGenerator mapGen;
+    public Node[][] Map;
+
+    int playerposx;
+    int playerposy;
 
 	void Start() 
     {
-        chunks = new List<List<GameObject>>();
-
         if (camShake == null)
         {
             camShake = GetComponent<CameraShake>();
@@ -61,45 +63,192 @@ public class GameMaster : MonoBehaviour {
             }
         }
 
+        mapGen = GetComponent<MapGenerator>();
         MainMenu.GetComponent<Animator>().SetBool("Active", true);
+        mapLight = new MapLight();
+
+        preRenderedLightOfSources = new List<PreRenderedLight>();
 	}
+
+    #region StartGame
 
     public void StartGame()
     {
+        if (gameIsStarting)
+            return;
+
+        Map = new Node[mapGen.width][];
+        for (int i = 0; i < Map.GetLength(0); i++)
+            Map[i] = new Node[mapGen.height * 2];
+
         if (!LoadingScreen.active)
         {
             LoadingScreen.SetActive(true);
             MainMenu.SetActive(false);
-            Invoke("StartGame", .1f);
+            Invoke("StartGame", 0.01f);
             return;
         }
 
-        mapGen = GetComponent<MapGenerator>();
-        mapGen.GenerateMap();
-        ShowThyMap(mapGen.width, mapGen.height);
+        gameIsStarting = true;
+        StartCoroutine(StartingGame());
+    }
 
-        PlaceSpawn(mobSpawn3);
-        PlaceSpawn(mobSpawn4);
+    public struct Node
+    {
+        public int id;
+        public string name;
+        public bool shown;
+        public GameObject clone;
+        public SpriteRenderer spriteRenderer;
+        public float blockingAmount;
+    }
 
-        mapGen.GenerateMap();
-        MakeSureDONTDefyTheGravity();
+    public struct Coord
+    {
+        public int x;
+        public int y;
 
-        for (int i = 0; i < 5; i++)
-            mapGen.SmoothMap();
+        public Coord(int cx, int cy)
+        {
+            x = cx;
+            y = cy;
+        }
+    }
 
-        ShowThyMap(mapGen.width, mapGen.height, 0.5f, true);
+    IEnumerator StartingGame()
+    {
+        if (!gameIsStarting)
+            yield break;
 
-        PlaceSpawn(spawnPoint);
-        PlaceSpawn(mobSpawn1);
-        PlaceSpawn(mobSpawn2);
-        StartCoroutine(_RespawnPlayer());
+        if (numberOfGens == 0)
+        {
+            StartCoroutine(mapGen.GenerateMap());
+            for (; ; )
+                if (Generating)
+                    yield return null;
+                else break;
 
-        HasGameStarted = true;
+            for (int i = 0; i < mapGen.width; i++)
+            {
+                for (int j = mapGen.height; j < mapGen.height * 2; j++)
+                {
+                    Map[i][j].id = mapGen.map[i, j - mapGen.height];
+                }
+            }
 
-        Invoke("MakeMenuInactive", .1f);
-        isMenuActive = false;
+            PlaceSpawn(mobSpawn3);
+            PlaceSpawn(mobSpawn4);
+        }
 
-        LoadingScreen.SetActive(false);
+        if (numberOfGens == 1 && !Generating)
+        {
+            StartCoroutine(mapGen.GenerateMap());
+            for (; ; )
+                if (Generating)
+                    yield return null;
+                else break;
+
+            MakeSureDONTDefyTheGravity();
+
+            for (int i = 0; i < 5; i++)
+                mapGen.SmoothMap();
+
+            for (int i = 0; i < mapGen.width; i++)
+            {
+                for (int j = 0; j < mapGen.height; j++)
+                {
+                    Map[i][j].id = mapGen.map[i, j];
+                }
+            }
+
+            PlaceSpawn(spawnPoint);
+            PlaceSpawn(mobSpawn1);
+            PlaceSpawn(mobSpawn2);
+            StartCoroutine(_RespawnPlayer());
+
+            Invoke("MakeMenuInactive", .1f);
+            isMenuActive = false;
+
+            LoadingScreen.SetActive(false);
+            gameIsStarting = false;
+        }
+
+        StartCoroutine(ShowThyMap());
+        for (; ; )
+            if (isShowingMap)
+                yield return null;
+            else break;
+
+        if (numberOfGens == 2)
+        {
+            HasGameStarted = true;
+        }
+
+        lastSpawn = Time.time + spawnDelay;
+
+        yield return new WaitForSeconds(2f);
+
+        yield break;
+    }
+
+    void MakeSureDONTDefyTheGravity()
+    {
+        for (int x = 0; x < mapGen.width; x++)
+        {
+            bool fly = false;
+            for (int y = mapGen.height - 1; y >= 0; y--)
+            {
+                if (mapGen.map[x, y] == 0)
+                    fly = true;
+
+                if (fly == true)
+                    mapGen.map[x, y] = 0;
+            }
+        }
+    }
+
+    bool isShowingMap = false;
+
+    IEnumerator ShowThyMap()
+    {
+        isShowingMap = true;
+        for (int i = 0; i < mapGen.width; i++)
+        {
+            for (int j = 0; j < mapGen.height * 2; j++)
+            {
+                GameObject clone;
+
+                if (j > mapGen.height)
+                    clone = Instantiate(Resources.Load("Prefabs/" + Map[i][j].id.ToString(), typeof(GameObject)), new Vector3((float)i / 2, (float)-(j - mapGen.height) / 2), Quaternion.identity) as GameObject;
+                else
+                    clone = Instantiate(Resources.Load("Prefabs/" + Map[i][j].id.ToString(), typeof(GameObject)), new Vector3((float)i / 2, mapGen.height / 2 - (float)j / 2), Quaternion.identity) as GameObject;
+
+                Map[i][j].clone = clone;
+                Map[i][j].spriteRenderer = clone.GetComponent<SpriteRenderer>();
+                Map[i][j].shown = true;
+                if (Map[i][j].clone.tag != "Air")
+                    Map[i][j].blockingAmount = 0.10f;
+            }
+            if (i % (int)(1000 / mapGen.height * 2) == 0)
+                yield return null;
+        }
+        isShowingMap = false;
+    }
+
+    void PlaceSpawn(Transform spawn, bool negativeY = false)
+    {
+        int x = Random.Range(10, mapGen.width - 10);
+        for (int y = 0; y < mapGen.height; y++)
+        {
+            if (mapGen.map[x, y] == 0)
+            {
+                if (!negativeY)
+                    spawn.position = new Vector2(x / 4, (y + 8) / 4);
+                else
+                    spawn.position = new Vector2(x / 4, (-y + 8) / 4);
+
+            }
+        }
     }
 
     void SpawnMobs()
@@ -112,10 +261,26 @@ public class GameMaster : MonoBehaviour {
         lastSpawn = Time.time + mobSpawnDelay;
     }
 
+    #endregion
+
     void Update()
     {
         if (!HasGameStarted)
             return;
+
+        playerposx = (int)(m_Player.position.x * 2);
+        playerposy = (int)(m_Player.position.y * 2);
+
+        if (playerposy >= 0)
+            playerposy = mapGen.height - playerposy;
+        else
+        {
+            playerposy *= -1;
+            playerposy += mapGen.height;
+        }
+
+        if (!updatingLight)
+            StartCoroutine(UpdateLight());
 
         if (Time.time > lastSpawn)
             SpawnMobs();
@@ -145,16 +310,16 @@ public class GameMaster : MonoBehaviour {
 
                 Time.timeScale = 0f;
             }
-/*
-        foreach (List<GameObject> chunkList in chunks)
-            foreach (GameObject chunk in chunkList)
-            {
-                if (chunk.transform.position.x + blocksPerChunkSide * 0.25f + Offset > Camera.main.transform.position.x && chunk.transform.position.x - Offset < Camera.main.transform.position.x &&
-                    chunk.transform.position.y + blocksPerChunkSide * 0.25f + Offset > Camera.main.transform.position.y && chunk.transform.position.y - Offset < Camera.main.transform.position.y)
-                    chunk.SetActive(true);
-                else
-                    chunk.SetActive(false);
-            }*/
+    }
+
+    public bool isValidPosition(Coord coord)
+    {
+        return coord.x >= 0 && coord.x < mapGen.width && coord.y >= 0 && coord.y < mapGen.height * 2;
+    }
+
+    public bool isValidPositionNC(int coordX, int coordY)
+    {
+        return coordX >= 0 && coordX < mapGen.width && coordY >= 0 && coordY < mapGen.height * 2;
     }
 
     void MakeMenuInactive()
@@ -168,83 +333,426 @@ public class GameMaster : MonoBehaviour {
             FPSCounter.SetActive(true);
     }
 
-    void PlaceSpawn(Transform spawn, bool negativeY = false)
+    #region LightingSystem
+
+    bool updatingLight = false;
+
+    IEnumerator UpdateLight()
     {
-        int x = Random.Range(10, mapGen.width - 10);
-        for (int y = 0; y < mapGen.height; y++)
+        updatingLight = true;
+        int frame = 0;
+        for (; ; )
         {
-            if (mapGen.map[x, y] == 0)
+            if (frame == 0)
             {
-                if (!negativeY)
-                    spawn.position = new Vector2(x / 4, (y + 8) / 4);
-                else
-                    spawn.position = new Vector2(x / 4, (-y + 8) / 4);
-
-            }
-        }
-    }
-
-    void ShowThyMap(int width, int height, float AddToHeight = 0, bool negative = false)
-    {
-        int numberofchunks = 0;
-
-        List<GameObject> Tempchunks = new List<GameObject>();
-
-        for (int i = 0; i < (width / blocksPerChunkSide) * (height / blocksPerChunkSide); i++)
-        {
-            GameObject chunk = new GameObject(numberofchunks.ToString());
-            Tempchunks.Add(chunk);
-            numberofchunks++;
-        }
-
-        for (int i = 0; i < width; i++)
-        {
-            for (int j = 0; j < height; j++)
-            {
-                GameObject clone;
-
-                if (!negative)
-                {   
-                    clone = Instantiate(Resources.Load("Prefabs/" + mapGen.map[i, j].ToString(), typeof(GameObject)), new Vector3((float)i / 2, (float)-j / 2 + AddToHeight), Quaternion.identity) as GameObject;
-
-                    if (i % blocksPerChunkSide == 0 && j % blocksPerChunkSide == 0)
-                        Tempchunks[i / blocksPerChunkSide * (height / blocksPerChunkSide) + j / blocksPerChunkSide].transform.position = clone.transform.position;
-
-                    clone.transform.SetParent(Tempchunks[i / blocksPerChunkSide * (height / blocksPerChunkSide) + j / blocksPerChunkSide].transform);
-                }
-                else
+                for (int i = 0; i < lightSources.Count; i++)
                 {
-                    if (mapGen.map[i, j] != 0)
-                        mapGen.map[i, j] = 3;
+                    if (lightSources[i] == null)
+                    {
+                        lightSources.Remove(lightSources[i]);
+                        i--;
+                        continue;
+                    }
 
-                    clone = Instantiate(Resources.Load("Prefabs/" + mapGen.map[i, j].ToString(), typeof(GameObject)), new Vector3((float)i / 2, (float)j / 2 + AddToHeight), Quaternion.identity) as GameObject;
+                    if (lightSources[i].Added && lightSources[i].Stationary)
+                        continue;
 
-                    if (i % blocksPerChunkSide == 0 && j % blocksPerChunkSide == 0)
-                        Tempchunks[i / blocksPerChunkSide * (height / blocksPerChunkSide) + j / blocksPerChunkSide].transform.position = clone.transform.position;
+                    lightSources[i].UpdateMapPos();
+                    CoordOfCurLight = new Coord(lightSources[i].MapPosX, lightSources[i].MapPosY);
 
-                    clone.transform.SetParent(Tempchunks[i / blocksPerChunkSide * (height / blocksPerChunkSide) + j / blocksPerChunkSide].transform);
+                    if (lightSources[i].Stationary)
+                    {
+                        applyLight(CoordOfCurLight.x, CoordOfCurLight.y, 0, i);
+                        lightSources[i].Added = true;
+                    }
+                    else
+                    {
+                        applyLight(CoordOfCurLight.x, CoordOfCurLight.y, 0, i, false);
+                    }
+                }
+
+                for (int i = 0; i < lightSources.Count; i++)
+                {
+                    if (!lightSources[i].Stationary)
+                        mapLight.ApplyLight(i);
+                }
+
+                frame++;
+                yield return null;
+            }
+
+            if(frame == 1)
+            {
+                for (int i = 0; i < lightSources.Count; i++)
+                {
+                    if (!lightSources[i].Stationary)
+                        for (int x = 0; x < lightSources[i].mobileLight.GetLength(0); x++)
+                            for (int y = 0; y < lightSources[i].mobileLight.GetLength(0); y++)
+                                lightSources[i].fadeOutLight[x][y] = lightSources[i].fadeOutLight[x][y] - 0.02f;
+                }
+                for (int i = 0; i < lightSources.Count; i++)
+                {
+                    if (!lightSources[i].Stationary)
+                        mapLight.ApplyFadeOutLight(i);
+                }
+
+                frame++;
+                yield return null;
+            }
+
+            if(frame < 5)
+            {
+                for (int i = 0; i < lightSources.Count; i++)
+                {
+                    if (!lightSources[i].Stationary)
+                        for (int x = 0; x < lightSources[i].fadeOutLight.GetLength(0); x++)
+                            for (int y = 0; y < lightSources[i].fadeOutLight.GetLength(0); y++)
+                                lightSources[i].fadeOutLight[x][y] -= 0.01f;
+                }
+                for (int i = 0; i < lightSources.Count; i++)
+                {
+                    if (!lightSources[i].Stationary)
+                        mapLight.ApplyFadeOutLight(i);
+                }
+                
+                frame++;
+                yield return null;
+            }
+
+            if (frame == 5)
+            {
+                for (int i = 0; i < lightSources.Count; i++)
+                {
+                    if (!lightSources[i].Stationary)
+                        mapLight.ResetDinamicMatrix(i);
+                }
+
+                for (int i = 0; i < lightSources.Count; i++)
+                {
+                    if (!lightSources[i].Stationary)
+                        for (int x = 0; x < lightSources[i].mobileLight.GetLength(0); x++)
+                            for (int y = 0; y < lightSources[i].mobileLight.GetLength(0); y++)
+                                lightSources[i].fadeOutLight[x][y] -= 0.1f;
+                }
+                for (int i = 0; i < lightSources.Count; i++)
+                {
+                    if (!lightSources[i].Stationary)
+                        mapLight.ApplyFadeOutLight(i);
+                }
+
+                frame = 0;
+            }
+        }
+    }
+
+    public float AirAffection = .1f;
+
+    public List<LightSource> lightSources;
+    public List<PreRenderedLight> preRenderedLightOfSources;
+    Coord CoordOfCurLight;
+
+    public class MapLight
+    {
+        public float[][] mapLightLevel;
+
+        public MapLight()
+        {
+            mapLightLevel = new float[GameMaster.gm.mapGen.width][];
+
+            for (int i = 0; i < mapLightLevel.GetLength(0); i++)
+                mapLightLevel[i] = new float[GameMaster.gm.mapGen.height * 2];
+        }
+
+        public void SetLight(int coordX, int coordY, float newLight)
+        {
+            mapLightLevel[coordX][coordY] = newLight;
+
+            if (GetLightBlockingAmountAt(coordX, coordY) == 0.10f)
+                GameMaster.gm.Map[coordX][coordY].spriteRenderer.color = new Color(newLight, newLight, newLight);
+            else if (GetLightBlockingAmountAt(coordX, coordY) == 0f)
+                GameMaster.gm.Map[coordX][coordY].spriteRenderer.color = new Color(newLight, newLight, newLight, 1 - newLight);
+        }
+
+        public void DinamicSetLight(int coordX, int coordY, float newLight, int index)
+        {
+            GameMaster.gm.lightSources[index].mobileLight[coordX - GameMaster.gm.CoordOfCurLight.x + GameMaster.gm.preRenderedLightOfSources[index].initCoord.x]
+                [coordY - GameMaster.gm.CoordOfCurLight.y + GameMaster.gm.preRenderedLightOfSources[index].initCoord.y] = newLight;
+        }
+
+        public void ResetDinamicMatrix(int index)
+        {
+            for (int i = 0; i < GameMaster.gm.lightSources[index].mobileLight.GetLength(0); i++)
+                System.Array.Clear(GameMaster.gm.lightSources[index].mobileLight[i], 0, GameMaster.gm.lightSources[index].mobileLight.GetLength(0));
+        }
+
+        public float GetLight(int coordX, int coordY)
+        {
+            return mapLightLevel[coordX][coordY];
+        }
+
+        public float DinamicGetLight(int coordX, int coordY, int index)
+        {
+            return GameMaster.gm.lightSources[index].mobileLight[coordX - GameMaster.gm.CoordOfCurLight.x + GameMaster.gm.preRenderedLightOfSources[index].initCoord.x]
+                [coordY - GameMaster.gm.CoordOfCurLight.y + GameMaster.gm.preRenderedLightOfSources[index].initCoord.y];
+        }
+
+        public float DinamicGetFadeOutLight(int coordX, int coordY, int index)
+        {
+            return GameMaster.gm.lightSources[index].fadeOutLight[coordX - GameMaster.gm.CoordOfCurLight.x + GameMaster.gm.preRenderedLightOfSources[index].initCoord.x]
+                [coordY - GameMaster.gm.CoordOfCurLight.y + GameMaster.gm.preRenderedLightOfSources[index].initCoord.y];
+        }
+
+        public float DinamicGetLightAll(int coordX, int coordY, int index)
+        {
+            var maxValue = GetLight(coordX, coordY);
+
+            for (int i = 0; i < GameMaster.gm.lightSources.Count; i++) 
+            {
+                if (GameMaster.gm.lightSources[i].Stationary)
+                    continue;
+
+                //if (Vector2.Distance(source.transform.position, GameMaster.gm.lightSources[index].transform.position) * 2 < source.mobileLight.GetLength(0) / 2 + GameMaster.gm.lightSources[index].mobileLight.GetLength(0) / 2)
+                if (DinamicGetLight(coordX, coordY, i) > maxValue)
+                    maxValue = DinamicGetLight(coordX, coordY, i);
+
+                if (DinamicGetFadeOutLight(coordX, coordY, i) > maxValue)
+                    maxValue = DinamicGetFadeOutLight(coordX, coordY, i);
+
+            }
+
+            return maxValue;
+        }
+
+        public void ApplyLight(int index)
+        {
+            var mapCoordX = GameMaster.gm.lightSources[index].MapPosX - GameMaster.gm.preRenderedLightOfSources[index].initCoord.x;
+            var mapCoordY = GameMaster.gm.lightSources[index].MapPosY - GameMaster.gm.preRenderedLightOfSources[index].initCoord.y;
+
+            for (int x = 0; x < GameMaster.gm.lightSources[index].mobileLight.GetLength(0); x++)
+            {
+                if (mapCoordY + x < 0 || mapCoordX + x >= GameMaster.gm.mapGen.width)
+                    continue;
+
+                for (int y = 0; y < GameMaster.gm.lightSources[index].mobileLight.GetLength(0); y++)
+                {
+                    if (mapCoordY + y < 0 || mapCoordY + y >= GameMaster.gm.mapGen.height * 2)
+                        continue;
+
+                    var newLight = GameMaster.gm.lightSources[index].mobileLight[x][y];
+                    if (newLight >= DinamicGetLightAll(mapCoordX + x, mapCoordY + y, index))
+                        if (GetLightBlockingAmountAt(mapCoordX + x, mapCoordY + y) == 0.10f)
+                            GameMaster.gm.Map[mapCoordX + x][mapCoordY + y].spriteRenderer.color = new Color(newLight, newLight, newLight);
+                        else if (GetLightBlockingAmountAt(mapCoordX + x, mapCoordY + y) == 0f)
+                            GameMaster.gm.Map[mapCoordX + x][mapCoordY + y].spriteRenderer.color = new Color(newLight, newLight, newLight, 1 - newLight * 2);
                 }
             }
         }
 
-        chunks.Add(Tempchunks);
-    }
-
-    void MakeSureDONTDefyTheGravity()
-    {
-        for (int x = 0; x < mapGen.width; x++)
+        public void ApplyFadeOutLight(int index)
         {
-            bool fly = false;
-            for (int y = 0; y < mapGen.height; y++)
-            {
-                if (mapGen.map[x, y] == 0)
-                    fly = true;
+            var mapCoordX = GameMaster.gm.lightSources[index].MapPosX - GameMaster.gm.preRenderedLightOfSources[index].initCoord.x;
+            var mapCoordY = GameMaster.gm.lightSources[index].MapPosY - GameMaster.gm.preRenderedLightOfSources[index].initCoord.y;
 
-                if (fly == true)
-                    mapGen.map[x, y] = 0;
+            for (int x = 0; x < GameMaster.gm.lightSources[index].fadeOutLight.GetLength(0); x++)
+            {
+                if (mapCoordY + x < 0 || mapCoordX + x >= GameMaster.gm.mapGen.width)
+                    continue;
+
+                for (int y = 0; y < GameMaster.gm.lightSources[index].fadeOutLight.GetLength(0); y++)
+                {
+                    if (mapCoordY + y < 0 || mapCoordY + y >= GameMaster.gm.mapGen.height * 2)
+                        continue;
+
+                    var newLight = GameMaster.gm.lightSources[index].fadeOutLight[x][y];
+                    if (newLight >= DinamicGetLightAll(mapCoordX + x, mapCoordY + y, index))
+                        if (GetLightBlockingAmountAt(mapCoordX + x, mapCoordY + y) == 0.10f)
+                            GameMaster.gm.Map[mapCoordX + x][mapCoordY + y].spriteRenderer.color = new Color(newLight, newLight, newLight);
+                        else if (GetLightBlockingAmountAt(mapCoordX + x, mapCoordY + y) == 0f)
+                            GameMaster.gm.Map[mapCoordX + x][mapCoordY + y].spriteRenderer.color = new Color(newLight, newLight, newLight, 1 - newLight * 2);
+                }
             }
         }
+
+        public float GetLightBlockingAmountAt(int coordX, int coordY)
+        {
+            return GameMaster.gm.Map[coordX][coordY].blockingAmount;
+        }
     }
+
+    public class PreRenderedLight
+    {
+        public float[][] preRenderedLight;
+        public GameMaster.Coord initCoord;
+        public float refPower;
+
+        public void PreRender()
+        {
+            for (int i = 3; i < preRenderedLight.GetLength(0) - 3; i++)
+                for (int j = 3; j < preRenderedLight.GetLength(0) - 3; j++)
+                {
+                    preRenderedLight[i][j] = refPower - Mathf.Sqrt(Mathf.Pow(i - initCoord.x, 2) + Mathf.Pow(j - initCoord.y, 2)) / 20;
+                }
+        }
+
+        public float GetLightAt(int coordX, int coordY)
+        {
+            return preRenderedLight[coordX + initCoord.x][coordY + initCoord.y];
+        }
+    }
+
+    public void PreRenderLight(float Power)
+    {
+        PreRenderedLight light = new PreRenderedLight();
+
+        if ((int)(lightSources[lightSources.Count - 1].Power % 0.05f) % 2 == 0)
+            light.preRenderedLight = new float[(int)(Power * 40) + 1][];
+        else
+            light.preRenderedLight = new float[(int)(Power * 40)][];
+
+        for (int i = 0; i < light.preRenderedLight.GetLength(0); i++)
+                light.preRenderedLight[i] = new float[light.preRenderedLight.GetLength(0)];
+
+        light.initCoord = new GameMaster.Coord((int)((light.preRenderedLight.GetLength(0) - 1) / 2), (int)((light.preRenderedLight.GetLength(0) - 1) / 2));
+        light.refPower = Power;
+        light.PreRender();
+
+        preRenderedLightOfSources.Add(light);
+    }
+
+    MapLight mapLight;
+    
+    void applyLight(int curCoordX, int curCoordY, float encounteredWallness, int index, bool Stationary = true)
+    {
+        if (!isValidPositionNC(curCoordX, curCoordY)) return;
+
+        encounteredWallness += mapLight.GetLightBlockingAmountAt(curCoordX, curCoordY);
+        float newLight = preRenderedLightOfSources[index].GetLightAt(CoordOfCurLight.x - curCoordX, CoordOfCurLight.y - curCoordY) - encounteredWallness;
+
+        if (newLight <= mapLight.GetLight(curCoordX, curCoordY)) return;
+
+        if (Stationary)
+            mapLight.SetLight(curCoordX, curCoordY, newLight);
+        else
+        {
+            if (newLight <= mapLight.DinamicGetLight(curCoordX, curCoordY, index)) return;
+
+            mapLight.DinamicSetLight(curCoordX, curCoordY, newLight, index);
+
+            applyLight(curCoordX + 1, curCoordY, encounteredWallness, index, false);
+            applyLight(curCoordX, curCoordY + 1, encounteredWallness, index, false);
+            applyLight(curCoordX - 1, curCoordY, encounteredWallness, index, false);
+            applyLight(curCoordX, curCoordY - 1, encounteredWallness, index, false);
+            return;
+        }
+
+        applyLight(curCoordX + 1, curCoordY, encounteredWallness, index);
+        applyLight(curCoordX, curCoordY + 1, encounteredWallness, index);
+        applyLight(curCoordX - 1, curCoordY, encounteredWallness, index);
+        applyLight(curCoordX, curCoordY - 1, encounteredWallness, index);
+    }
+
+    #endregion
+
+    #region OldLightingSystem
+
+    /*
+    void Lighting(Coord startCoord, int dist, float powr)
+    {
+        float monotony = 1 / powr;
+
+        float[,] mapFlags = new float[mapGen.width, mapGen.height * 2];
+        float[,] tempMapLightLevel = new float[mapGen.width, mapGen.height * 2];
+
+        int[] rowad = { -1, 0, 1, 0 };
+        int[] linead = { 0, 1, 0, -1 };
+
+        Queue<Coord> queue = new Queue<Coord>();
+
+        Coord coord;
+        Coord auxcoord;
+
+        coord = startCoord;
+        queue.Enqueue(coord);
+        tempMapLightLevel[coord.x, coord.y] += powr * monotony;
+
+        while (queue.Count != 0)
+        {
+            if (queue.Count > 0)
+                coord = queue.Dequeue();
+            if (mapFlags[coord.x, coord.y] > dist)
+                continue;
+
+            for (int i = 0; i < 4; i++)
+            {
+                auxcoord.x = coord.x + linead[i];
+                auxcoord.y = coord.y + rowad[i];
+
+                if (auxcoord.x < 0 || auxcoord.x > mapGen.width || auxcoord.y < 0 || auxcoord.y > mapGen.height * 2)
+                    continue;
+
+                if (mapFlags[auxcoord.x, auxcoord.y] != 0)
+                    continue;
+
+                if (Map[auxcoord.x, auxcoord.y].clone == null)
+                    continue;
+
+                mapFlags[auxcoord.x, auxcoord.y] = Mathf.Sqrt(Mathf.Pow(auxcoord.x - startCoord.x, 2) + Mathf.Pow(auxcoord.y - startCoord.y, 2));
+
+                if (Map[auxcoord.x, auxcoord.y].clone.transform.tag == "Air")
+                {
+                    if (auxcoord.x <= startCoord.x + 1 + (int)(2 * 3.14f * mapFlags[auxcoord.x, auxcoord.y] / 16) && auxcoord.x >= startCoord.x - 1 - (int)(2 * 3.14f * mapFlags[auxcoord.x, auxcoord.y] / 16) &&
+                        auxcoord.y < startCoord.y)
+                        tempMapLightLevel[auxcoord.x, auxcoord.y] = tempMapLightLevel[auxcoord.x, auxcoord.y + 1] - monotony * AirAffection;
+                    else if (auxcoord.x > startCoord.x &&
+                        auxcoord.y <= startCoord.y + 1 + (int)(2 * 3.14f * mapFlags[auxcoord.x, auxcoord.y] / 16) && auxcoord.y >= startCoord.y - 1 - (int)(2 * 3.14f * mapFlags[auxcoord.x, auxcoord.y] / 16))
+                        tempMapLightLevel[auxcoord.x, auxcoord.y] = tempMapLightLevel[auxcoord.x - 1, auxcoord.y] - monotony * AirAffection;
+                    else if (auxcoord.x <= startCoord.x + 1 + (int)(2 * 3.14f * mapFlags[auxcoord.x, auxcoord.y] / 16) && auxcoord.x >= startCoord.x - 1 - (int)(2 * 3.14f * mapFlags[auxcoord.x, auxcoord.y] / 16) &&
+                        auxcoord.y > startCoord.y)
+                        tempMapLightLevel[auxcoord.x, auxcoord.y] = tempMapLightLevel[auxcoord.x, auxcoord.y - 1] - monotony * AirAffection;
+                    else if (auxcoord.x < startCoord.x &&
+                        auxcoord.y <= startCoord.y + 1 + (int)(2 * 3.14f * mapFlags[auxcoord.x, auxcoord.y] / 16) && auxcoord.y >= startCoord.y - 1 - (int)(2 * 3.14f * mapFlags[auxcoord.x, auxcoord.y] / 16))
+                        tempMapLightLevel[auxcoord.x, auxcoord.y] = tempMapLightLevel[auxcoord.x + 1, auxcoord.y] - monotony * AirAffection;
+                    else if (auxcoord.x > startCoord.x && auxcoord.y < startCoord.y)
+                        tempMapLightLevel[auxcoord.x, auxcoord.y] = tempMapLightLevel[auxcoord.x - 1, auxcoord.y + 1] - monotony * AirAffection;
+                    else if (auxcoord.x > startCoord.x && auxcoord.y > startCoord.y)
+                        tempMapLightLevel[auxcoord.x, auxcoord.y] = tempMapLightLevel[auxcoord.x - 1, auxcoord.y - 1] - monotony * AirAffection;
+                    else if (auxcoord.x < startCoord.x && auxcoord.y > startCoord.y)
+                        tempMapLightLevel[auxcoord.x, auxcoord.y] = tempMapLightLevel[auxcoord.x + 1, auxcoord.y - 1] - monotony * AirAffection;
+                    else
+                        tempMapLightLevel[auxcoord.x, auxcoord.y] = tempMapLightLevel[auxcoord.x + 1, auxcoord.y + 1] - monotony * AirAffection;
+                }
+                else if (Map[auxcoord.x, auxcoord.y].clone.transform.tag == "Breakable")
+                {
+                    if (auxcoord.x <= startCoord.x + 1 + (int)(2 * 3.14f * mapFlags[auxcoord.x, auxcoord.y] / 16) && auxcoord.x >= startCoord.x - 1 - (int)(2 * 3.14f * mapFlags[auxcoord.x, auxcoord.y] / 16) &&
+                        auxcoord.y < startCoord.y)
+                        tempMapLightLevel[auxcoord.x, auxcoord.y] = tempMapLightLevel[auxcoord.x, auxcoord.y + 1] - monotony;
+                    else if (auxcoord.x > startCoord.x &&
+                        auxcoord.y <= startCoord.y + 1 + (int)(2 * 3.14f * mapFlags[auxcoord.x, auxcoord.y] / 16) && auxcoord.y >= startCoord.y - 1 - (int)(2 * 3.14f * mapFlags[auxcoord.x, auxcoord.y] / 16))
+                        tempMapLightLevel[auxcoord.x, auxcoord.y] = tempMapLightLevel[auxcoord.x - 1, auxcoord.y] - monotony;
+                    else if (auxcoord.x <= startCoord.x + 1 + (int)(2 * 3.14f * mapFlags[auxcoord.x, auxcoord.y] / 16) && auxcoord.x >= startCoord.x - 1 - (int)(2 * 3.14f * mapFlags[auxcoord.x, auxcoord.y] / 16) &&
+                        auxcoord.y > startCoord.y)
+                        tempMapLightLevel[auxcoord.x, auxcoord.y] = tempMapLightLevel[auxcoord.x, auxcoord.y - 1] - monotony;
+                    else if (auxcoord.x < startCoord.x &&
+                        auxcoord.y <= startCoord.y + 1 + (int)(2 * 3.14f * mapFlags[auxcoord.x, auxcoord.y] / 16) && auxcoord.y >= startCoord.y - 1 - (int)(2 * 3.14f * mapFlags[auxcoord.x, auxcoord.y] / 16))
+                        tempMapLightLevel[auxcoord.x, auxcoord.y] = tempMapLightLevel[auxcoord.x + 1, auxcoord.y] - monotony * AirAffection;
+                    else if (auxcoord.x > startCoord.x && auxcoord.y < startCoord.y)
+                        tempMapLightLevel[auxcoord.x, auxcoord.y] = tempMapLightLevel[auxcoord.x - 1, auxcoord.y + 1] - monotony;
+                    else if (auxcoord.x > startCoord.x && auxcoord.y > startCoord.y)
+                        tempMapLightLevel[auxcoord.x, auxcoord.y] = tempMapLightLevel[auxcoord.x - 1, auxcoord.y - 1] - monotony;
+                    else if (auxcoord.x < startCoord.x && auxcoord.y > startCoord.y)
+                        tempMapLightLevel[auxcoord.x, auxcoord.y] = tempMapLightLevel[auxcoord.x + 1, auxcoord.y - 1] - monotony;
+                    else
+                        tempMapLightLevel[auxcoord.x, auxcoord.y] = tempMapLightLevel[auxcoord.x + 1, auxcoord.y + 1] - monotony;
+                }
+
+                queue.Enqueue(auxcoord);
+            }
+            mapLightLevel[coord.x, coord.y] += tempMapLightLevel[coord.x, coord.y];
+        }
+    }
+    */
+
+    #endregion
 
     IEnumerator _RespawnPlayer()
     {

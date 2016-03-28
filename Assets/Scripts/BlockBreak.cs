@@ -4,6 +4,7 @@ using System.Collections;
 public class BlockBreak : MonoBehaviour 
 {
     public float m_Resistance = 2f;
+    public int id;
     public GameObject[] Drop;
 
 	void Start () 

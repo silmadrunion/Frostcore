@@ -10,13 +10,9 @@ public class P2DI_PlaceBlock : MonoBehaviour
 
     public float Range = 10f;
 
-    private LayerMask airMask;
-
     void Start()
     {
-        _camera = Camera.main;
-
-        airMask = LayerMask.GetMask("Air"); 
+        _camera = Camera.main; 
     }
 
     public void Place(GameObject block)
@@ -26,18 +22,24 @@ public class P2DI_PlaceBlock : MonoBehaviour
         Vector2 placePosition;
         if (canPlace() == true)
         {
-            placePosition.x = ((int)(positionClick.x / blockDimension.x) * blockDimension.x);
-            placePosition.y = ((int)(positionClick.y / blockDimension.y) * blockDimension.y);
-            Instantiate(block, placePosition, Quaternion.identity);
+            placePosition.x = (int)(positionClick.x * 2);
+            placePosition.y = (int)(positionClick.y * 2);
 
-            GameObject objectHit = null;
-
-            try
+            if (placePosition.y >= 0)
+                placePosition.y = GameMaster.gm.mapGen.height - placePosition.y;
+            else
             {
-                objectHit = Physics2D.OverlapPoint(placePosition, airMask).gameObject;
-                Destroy(objectHit);
+                placePosition.y *= -1;
+                placePosition.y += GameMaster.gm.mapGen.height;
             }
-            catch { }
+
+            if (block.GetComponent<BlockBreak>() == null)
+                return;
+
+            GameMaster.gm.Map[(int)placePosition.x][(int)placePosition.y].id = block.GetComponent<BlockBreak>().id;
+            Destroy(GameMaster.gm.Map[(int)placePosition.x][(int)placePosition.y].clone);
+            GameMaster.gm.Map[(int)placePosition.x][(int)placePosition.y].clone = null;
+            GameMaster.gm.Map[(int)placePosition.x][(int)placePosition.y].shown = false;
         }
     }
 

@@ -14,9 +14,9 @@ public class ItemIcon : MonoBehaviour
         if (InventoryDisplay.Instance.itemBeingDragged.rectTransform != null)
             return;
 
-        InventoryDisplay.Instance.itemBeingDragged.rectTransform = (Instantiate(transform.GetChild(0).gameObject, Vector3.zero, Quaternion.identity) as GameObject).GetComponent<RectTransform>();
-        transform.GetChild(0).GetComponent<Image>().sprite = InventoryDisplay.Instance.NullItemIcon;
-        InventoryDisplay.Instance.itemBeingDragged.copyOf = transform.GetChild(0).GetComponent<RectTransform>();
+        InventoryDisplay.Instance.itemBeingDragged.rectTransform = (Instantiate(transform.GetChild(1).gameObject, Vector3.zero, Quaternion.identity) as GameObject).GetComponent<RectTransform>();
+        transform.GetChild(1).GetComponent<Image>().sprite = InventoryDisplay.Instance.NullItemIcon;
+        InventoryDisplay.Instance.itemBeingDragged.copyOf = transform.GetChild(1).GetComponent<RectTransform>();
         InventoryDisplay.Instance.itemBeingDragged.posInContents = CorrespondingItemPosInContents;
         InventoryDisplay.Instance.itemBeingDragged.rectTransform.parent = Inventory.Instance.InventoryContents;
 
@@ -49,6 +49,6 @@ public class ItemIcon : MonoBehaviour
 
     public void ClearDraggedItem()
     {
-        transform.GetChild(0).GetComponent<Image>().sprite = InventoryDisplay.Instance.itemBeingDragged.rectTransform.GetComponent<Image>().sprite;
+        transform.GetChild(1).GetComponent<Image>().sprite = InventoryDisplay.Instance.itemBeingDragged.rectTransform.GetComponent<Image>().sprite;
     }
 }

@@ -17,19 +17,41 @@ public class MapGenerator : MonoBehaviour
     [HideInInspector]
     public int[,] map;
 
-    public void GenerateMap()
+    public IEnumerator GenerateMap()
     {
+        GameMaster.gm.Generating = true;
+
         map = new int[width, height];
-        RandomFillMap();
+
+        StartCoroutine(RandomFillMap());
+        for (; ; )
+            if (inRandomFillMap)
+                yield return null;
+            else break;
+
         for (int i = 0; i < 5; i++)
         {
-            SmoothMap();
+            StartCoroutine(SmoothMap());
+            for (; ; )
+                if (inSmoothMap)
+                    yield return null;
+                else break;
         }
 
-        ProcessMap();
+        StartCoroutine(ProcessMap());
+        for (; ; )
+            if (inProcessmap)
+                yield return null;
+            else break;
 
-        FillWithDefault();
+        StartCoroutine(FillWithDefault());
+        for (; ; )
+            if (inFillWIthDefault)
+                yield return null;
+            else break;
+
         mapFlags = new int[width, height];
+
         for (int x = 1; x < width - 1; x++)
         {
             for (int y = 1; y < height - 1; y++)
@@ -37,12 +59,36 @@ public class MapGenerator : MonoBehaviour
                 if (map[x, y] != 0 && mapFlags[x, y] == 0)
                     FindPropperItemFor(x, y);
             }
+
+            if (x % (int)(10000 / height) == 0)
+                yield return null;
         }
+
+        for (int x = 1; x < width - 1; x++)
+        {
+            for (int y = 1; y < height - 1; y++)
+            {
+                AddHalfblock(x, y);
+            }
+
+            if (x % (int)(10000 / height) == 0)
+                yield return null;
+        }
+
+        GameMaster.gm.numberOfGens++;
+        GameMaster.gm.Generating = false;
+
+        yield break;
     }
 
-    void ProcessMap()
+    List<List<Coord>> wallRegions;
+
+    bool inProcessmap;
+    IEnumerator ProcessMap()
     {
-        List<List<Coord>> wallRegions = GetRegions(1);
+        inProcessmap = true;
+        wallRegions = GetRegions(1);
+
         int wallThresholdSize = 50;
 
         foreach (List<Coord> wallRegion in wallRegions)
@@ -56,10 +102,11 @@ public class MapGenerator : MonoBehaviour
             }
         }
 
+        yield return null;
+
         List<List<Coord>> roomRegions = GetRegions(0);
         int roomThresholdSize = 50;
         List<Room> survivingRooms = new List<Room>();
-
         foreach (List<Coord> roomRegion in roomRegions)
         {
             if (roomRegion.Count < roomThresholdSize)
@@ -74,11 +121,15 @@ public class MapGenerator : MonoBehaviour
                 survivingRooms.Add(new Room(roomRegion, map));
             }
         }
+
+        yield return null;
+
         survivingRooms.Sort();
         survivingRooms[0].isMainRoom = true;
         survivingRooms[0].isAccessibleFromMainRoom = true;
 
         ConnectClosestRooms(survivingRooms);
+        inProcessmap = false;
     }
 
     void ConnectClosestRooms(List<Room> allRooms, bool forceAccessibilityFromMainRoom = false)
@@ -330,8 +381,10 @@ public class MapGenerator : MonoBehaviour
 
     System.Random pseudoRandom;
 
-    void RandomFillMap()
+    bool inRandomFillMap;
+    IEnumerator RandomFillMap()
     {
+        inRandomFillMap = true;
         if (useRandomSeed)
         {
             seed = Time.realtimeSinceStartup.ToString();
@@ -352,11 +405,18 @@ public class MapGenerator : MonoBehaviour
                     map[x, y] = (pseudoRandom.Next(0, 100) < randomFillPercent) ? 1 : 0;
                 }
             }
+
+            if (x % (int)(10000 / height) == 0)
+                yield return null;
         }
+
+        inRandomFillMap = false;
     }
 
-    public void SmoothMap()
+    bool inSmoothMap;
+    public IEnumerator SmoothMap()
     {
+        inSmoothMap = true;
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
@@ -367,9 +427,12 @@ public class MapGenerator : MonoBehaviour
                     map[x, y] = 1;
                 else if (neighbourWallTiles < 4)
                     map[x, y] = 0;
-
             }
+
+            if (x % (int)(10000 / height) == 0)
+                yield return null;
         }
+        inSmoothMap = false;
     }
 
     int GetSurroundingWallCount(int gridX, int gridY)
@@ -500,9 +563,10 @@ public class MapGenerator : MonoBehaviour
     public Element[] Blocks;
     public Element[] Default;
 
-
-    void FillWithDefault()
+    bool inFillWIthDefault;
+    IEnumerator FillWithDefault()
     {
+        inFillWIthDefault = true;
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
@@ -522,7 +586,11 @@ public class MapGenerator : MonoBehaviour
                 if (possibleElementFound.SourceId != 0)
                     map[x, y] = possibleElementFound.SourceId;
             }
+
+            if (x % (int)(10000 / height) == 0)
+                yield return null;
         }
+        inFillWIthDefault = false;
     }
 
     int[,] mapFlags;
@@ -564,9 +632,44 @@ public class MapGenerator : MonoBehaviour
                         if (tryhard > MaxBlocksTogheder * 2)
                             break;
                     }
-                    
+
                     return;
                 }
+        }
+    }
+
+    void AddHalfblock(int x, int y)
+    {
+        if (map[x, y] != 0)
+            return;
+
+        if (map[x, y - 1] != 0 && map[x + 1, y] != 0 && map[x, y - 1] < 10 && map[x + 1, y] < 10)
+        {
+            if (map[x + 1, y] == 1 || map[x + 1, y] == 2 || map[x + 1, y] == 3)
+                map[x, y] = map[x + 1, y] * 10 + 1;
+            else if (map[x, y - 1] == 1 || map[x, y - 1] == 2 || map[x, y - 1] == 3)
+                map[x, y] = map[x, y - 1] * 10 + 1;
+        }
+        else if (map[x + 1, y] != 0 && map[x, y + 1] != 0 && map[x + 1, y] < 10 && map[x, y + 1] < 10)
+        {
+            if (map[x, y + 1] == 1 || map[x, y + 1] == 2 || map[x, y + 1] == 3)
+                map[x, y] = map[x, y + 1] * 10 + 2;
+            else if (map[x + 1, y] == 1 || map[x + 1, y] == 2 || map[x + 1, y] == 3)
+                map[x, y] = map[x + 1, y] * 10 + 2;
+        }
+        else if (map[x, y + 1] != 0 && map[x - 1, y] != 0 && map[x, y + 1] < 10 && map[x - 1, y] < 10)
+        {
+            if (map[x - 1, y] == 1 || map[x - 1, y] == 2 || map[x - 1, y] == 3)
+                map[x, y] = map[x - 1, y] * 10 + 3;
+            else if (map[x, y + 1] == 1 || map[x, y + 1] == 2 || map[x, y + 1] == 3)
+                map[x, y] = map[x, y + 1] * 10 + 3;
+        }
+        else if (map[x - 1, y] != 0 && map[x, y - 1] != 0 && map[x - 1, y] < 10 && map[x, y - 1] < 10)
+        {
+            if (map[x, y - 1] == 1 || map[x, y - 1] == 2 || map[x, y - 1] == 3)
+                map[x, y] = map[x, y - 1] * 10 + 4;
+            else if (map[x - 1, y] == 1 || map[x - 1, y] == 2 || map[x - 1, y] == 3)
+                map[x, y] = map[x - 1, y] * 10 + 4;
         }
     }
 }
