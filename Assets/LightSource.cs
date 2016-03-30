@@ -6,13 +6,17 @@ public class LightSource : MonoBehaviour
     public float Power = 1;
 
     public int MapPosX;
-
     public int MapPosY;
+
+    public int antMapPosX;
+    public int antMapPosY;
 
     public bool Stationary = true;
     public bool Added = false;
-    public float[][] mobileLight;
-    public float[][] fadeOutLight;
+    public Unmanaged2DFloatMatrix mobileLight;
+    public Unmanaged2DFloatMatrix fadeOutLight;
+
+    public GameMaster.PreRenderedLight preRenderedLight;
 
     public void UpdateMapPos()
     {
@@ -23,25 +27,26 @@ public class LightSource : MonoBehaviour
             MapPosY = ((int)(transform.position.y * 2) * -1) + GameMaster.gm.mapGen.height;
     }
 
+    public void UpdateantMapPos()
+    {
+        antMapPosX = MapPosX;
+        antMapPosY = MapPosY;
+    }
+
     void Start()
     {
         if (!Stationary)
         {
             if ((int)(Power % 0.05f) % 2 == 0)
-                mobileLight = new float[(int)(Power * 40) + 5][];
+                mobileLight = new Unmanaged2DFloatMatrix((int)Power * 40 + 5, (int)Power * 40 + 5);
             else
-                mobileLight = new float[(int)(Power * 40) + 4][];
+                mobileLight = new Unmanaged2DFloatMatrix((int)Power * 40 + 4, (int)Power * 40 + 4);
 
-            for (int i = 0; i < mobileLight.GetLength(0); i++)
-                mobileLight[i] = new float[mobileLight.GetLength(0)];
-
-            fadeOutLight = new float[mobileLight.GetLength(0)][];
-
-            for (int i = 0; i < fadeOutLight.GetLength(0); i++)
-                fadeOutLight[i] = new float[fadeOutLight.GetLength(0)];
+            fadeOutLight = new Unmanaged2DFloatMatrix(mobileLight.SizeX, mobileLight.SizeY);
         }
 
         GameMaster.gm.lightSources.Add(this);
-        GameMaster.gm.PreRenderLight(Power);
+        GameMaster.gm.PreRenderLight(Power, this);
+        StartCoroutine(GameMaster.gm.UpdateLight(this));
     }
 }

@@ -279,9 +279,6 @@ public class GameMaster : MonoBehaviour {
             playerposy += mapGen.height;
         }
 
-        if (!updatingLight)
-            StartCoroutine(UpdateLight());
-
         if (Time.time > lastSpawn)
             SpawnMobs();
 
@@ -335,112 +332,86 @@ public class GameMaster : MonoBehaviour {
 
     #region LightingSystem
 
-    bool updatingLight = false;
-
-    IEnumerator UpdateLight()
+    public IEnumerator UpdateLight(LightSource source)
     {
-        updatingLight = true;
         int frame = 0;
+
+        var size = source.fadeOutLight.SizeX;
+
         for (; ; )
         {
             if (frame == 0)
             {
-                for (int i = 0; i < lightSources.Count; i++)
+                if (source == null)
                 {
-                    if (lightSources[i] == null)
-                    {
-                        lightSources.Remove(lightSources[i]);
-                        i--;
-                        continue;
-                    }
-
-                    if (lightSources[i].Added && lightSources[i].Stationary)
-                        continue;
-
-                    lightSources[i].UpdateMapPos();
-                    CoordOfCurLight = new Coord(lightSources[i].MapPosX, lightSources[i].MapPosY);
-
-                    if (lightSources[i].Stationary)
-                    {
-                        applyLight(CoordOfCurLight.x, CoordOfCurLight.y, 0, i);
-                        lightSources[i].Added = true;
-                    }
-                    else
-                    {
-                        applyLight(CoordOfCurLight.x, CoordOfCurLight.y, 0, i, false);
-                    }
+                    lightSources.Remove(source);
+                    yield break;
                 }
 
-                for (int i = 0; i < lightSources.Count; i++)
+                if (source.Added && source.Stationary)
+                    continue;
+
+                source.UpdateMapPos();
+
+                if (source.Stationary)
                 {
-                    if (!lightSources[i].Stationary)
-                        mapLight.ApplyLight(i);
+                    applyLight(source.MapPosX, source.MapPosY, 0, source);
+                    source.Added = true;
                 }
+                else
+                {
+                    applyLight(source.MapPosX, source.MapPosY, 0, source, false);
+                }
+
+                if (!source.Stationary)
+                    mapLight.ApplyLight(source);
 
                 frame++;
                 yield return null;
             }
 
-            if(frame == 1)
+            if (frame < 5)
             {
-                for (int i = 0; i < lightSources.Count; i++)
-                {
-                    if (!lightSources[i].Stationary)
-                        for (int x = 0; x < lightSources[i].mobileLight.GetLength(0); x++)
-                            for (int y = 0; y < lightSources[i].mobileLight.GetLength(0); y++)
-                                lightSources[i].fadeOutLight[x][y] = lightSources[i].fadeOutLight[x][y] - 0.02f;
-                }
-                for (int i = 0; i < lightSources.Count; i++)
-                {
-                    if (!lightSources[i].Stationary)
-                        mapLight.ApplyFadeOutLight(i);
-                }
+                if (!source.Stationary)
+                    for (int x = 0; x < size; x++)
+                        for (int y = 0; y < size; y++)
+                            source.fadeOutLight[x, y] -= 0.2f;
+
+                if (!source.Stationary)
+                    mapLight.ApplyFadeOutLight(source);
 
                 frame++;
                 yield return null;
             }
 
-            if(frame < 5)
+            if(frame == 4)
             {
-                for (int i = 0; i < lightSources.Count; i++)
-                {
-                    if (!lightSources[i].Stationary)
-                        for (int x = 0; x < lightSources[i].fadeOutLight.GetLength(0); x++)
-                            for (int y = 0; y < lightSources[i].fadeOutLight.GetLength(0); y++)
-                                lightSources[i].fadeOutLight[x][y] -= 0.01f;
-                }
-                for (int i = 0; i < lightSources.Count; i++)
-                {
-                    if (!lightSources[i].Stationary)
-                        mapLight.ApplyFadeOutLight(i);
-                }
-                
+                if (!source.Stationary)
+                    mapLight.ResetDinamicFadeOutMatrix(source);
+
+                if (!source.Stationary)
+                    mapLight.ApplyFadeOutLight(source);
+
                 frame++;
                 yield return null;
             }
 
             if (frame == 5)
             {
-                for (int i = 0; i < lightSources.Count; i++)
-                {
-                    if (!lightSources[i].Stationary)
-                        mapLight.ResetDinamicMatrix(i);
-                }
+                source.UpdateantMapPos();
+                if (!source.Stationary)
+                    for (int x = 0; x < size; x++)
+                        for (int y = 0; y < size; y++)
+                            source.fadeOutLight[x, y] = source.mobileLight[x, y] - 0.4f;
 
-                for (int i = 0; i < lightSources.Count; i++)
-                {
-                    if (!lightSources[i].Stationary)
-                        for (int x = 0; x < lightSources[i].mobileLight.GetLength(0); x++)
-                            for (int y = 0; y < lightSources[i].mobileLight.GetLength(0); y++)
-                                lightSources[i].fadeOutLight[x][y] -= 0.1f;
-                }
-                for (int i = 0; i < lightSources.Count; i++)
-                {
-                    if (!lightSources[i].Stationary)
-                        mapLight.ApplyFadeOutLight(i);
-                }
+                if (!source.Stationary)
+                    mapLight.ApplyFadeOutLight(source);
+
+                if (!source.Stationary)
+                    mapLight.ResetDinamicMatrix(source);
 
                 frame = 0;
+                yield return null;
             }
         }
     }
@@ -449,7 +420,6 @@ public class GameMaster : MonoBehaviour {
 
     public List<LightSource> lightSources;
     public List<PreRenderedLight> preRenderedLightOfSources;
-    Coord CoordOfCurLight;
 
     public class MapLight
     {
@@ -473,16 +443,20 @@ public class GameMaster : MonoBehaviour {
                 GameMaster.gm.Map[coordX][coordY].spriteRenderer.color = new Color(newLight, newLight, newLight, 1 - newLight);
         }
 
-        public void DinamicSetLight(int coordX, int coordY, float newLight, int index)
+        public void DinamicSetLight(int coordX, int coordY, float newLight, LightSource source)
         {
-            GameMaster.gm.lightSources[index].mobileLight[coordX - GameMaster.gm.CoordOfCurLight.x + GameMaster.gm.preRenderedLightOfSources[index].initCoord.x]
-                [coordY - GameMaster.gm.CoordOfCurLight.y + GameMaster.gm.preRenderedLightOfSources[index].initCoord.y] = newLight;
+            source.mobileLight[coordX - source.MapPosX + source.mobileLight.SizeX / 2,
+                coordY - source.MapPosY + source.mobileLight.SizeY / 2] = newLight;
         }
 
-        public void ResetDinamicMatrix(int index)
+        public void ResetDinamicMatrix(LightSource source)
         {
-            for (int i = 0; i < GameMaster.gm.lightSources[index].mobileLight.GetLength(0); i++)
-                System.Array.Clear(GameMaster.gm.lightSources[index].mobileLight[i], 0, GameMaster.gm.lightSources[index].mobileLight.GetLength(0));
+            source.mobileLight.Clear();
+        }
+
+        public void ResetDinamicFadeOutMatrix(LightSource source)
+        {
+            source.fadeOutLight.Clear();
         }
 
         public float GetLight(int coordX, int coordY)
@@ -490,19 +464,29 @@ public class GameMaster : MonoBehaviour {
             return mapLightLevel[coordX][coordY];
         }
 
-        public float DinamicGetLight(int coordX, int coordY, int index)
+        public float DinamicGetLight(int coordX, int coordY, LightSource source)
         {
-            return GameMaster.gm.lightSources[index].mobileLight[coordX - GameMaster.gm.CoordOfCurLight.x + GameMaster.gm.preRenderedLightOfSources[index].initCoord.x]
-                [coordY - GameMaster.gm.CoordOfCurLight.y + GameMaster.gm.preRenderedLightOfSources[index].initCoord.y];
+            var X = coordX - source.MapPosX + source.mobileLight.SizeX / 2;
+            var Y = coordY - source.MapPosY + source.mobileLight.SizeY / 2;
+
+            if (X < 0 || X >= source.mobileLight.SizeX - 1 || Y < 0 || Y >= source.mobileLight.SizeY - 1)
+                return 0;
+
+            return source.mobileLight[X, Y];
         }
 
-        public float DinamicGetFadeOutLight(int coordX, int coordY, int index)
+        public float DinamicGetFadeOutLight(int coordX, int coordY, LightSource source)
         {
-            return GameMaster.gm.lightSources[index].fadeOutLight[coordX - GameMaster.gm.CoordOfCurLight.x + GameMaster.gm.preRenderedLightOfSources[index].initCoord.x]
-                [coordY - GameMaster.gm.CoordOfCurLight.y + GameMaster.gm.preRenderedLightOfSources[index].initCoord.y];
+            var X = coordX - source.antMapPosX + source.mobileLight.SizeY / 2;
+            var Y = coordY - source.antMapPosY + source.mobileLight.SizeY / 2;
+
+            if (X < 0 || X >= source.mobileLight.SizeX - 1 || Y < 0 || Y >= source.mobileLight.SizeY - 1)
+                return 0;
+
+            return source.fadeOutLight[X, Y];
         }
 
-        public float DinamicGetLightAll(int coordX, int coordY, int index)
+        public float DinamicGetLightAll(int coordX, int coordY, LightSource source)
         {
             var maxValue = GetLight(coordX, coordY);
 
@@ -511,64 +495,57 @@ public class GameMaster : MonoBehaviour {
                 if (GameMaster.gm.lightSources[i].Stationary)
                     continue;
 
-                //if (Vector2.Distance(source.transform.position, GameMaster.gm.lightSources[index].transform.position) * 2 < source.mobileLight.GetLength(0) / 2 + GameMaster.gm.lightSources[index].mobileLight.GetLength(0) / 2)
-                if (DinamicGetLight(coordX, coordY, i) > maxValue)
-                    maxValue = DinamicGetLight(coordX, coordY, i);
+                if (DinamicGetLight(coordX, coordY, GameMaster.gm.lightSources[i]) > maxValue)
+                    maxValue = DinamicGetLight(coordX, coordY, GameMaster.gm.lightSources[i]);
 
-                if (DinamicGetFadeOutLight(coordX, coordY, i) > maxValue)
-                    maxValue = DinamicGetFadeOutLight(coordX, coordY, i);
+                if (DinamicGetFadeOutLight(coordX, coordY, GameMaster.gm.lightSources[i]) > maxValue)
+                    maxValue = DinamicGetFadeOutLight(coordX, coordY, GameMaster.gm.lightSources[i]);
 
             }
 
             return maxValue;
         }
 
-        public void ApplyLight(int index)
+        public void ApplyLight(LightSource source)
         {
-            var mapCoordX = GameMaster.gm.lightSources[index].MapPosX - GameMaster.gm.preRenderedLightOfSources[index].initCoord.x;
-            var mapCoordY = GameMaster.gm.lightSources[index].MapPosY - GameMaster.gm.preRenderedLightOfSources[index].initCoord.y;
+            var mapCoordX = source.MapPosX - source.mobileLight.SizeY / 2;
+            var mapCoordY = source.MapPosY - source.mobileLight.SizeY / 2;
 
-            for (int x = 0; x < GameMaster.gm.lightSources[index].mobileLight.GetLength(0); x++)
+            for (int x = 0; x < source.mobileLight.SizeX; x++)
             {
-                if (mapCoordY + x < 0 || mapCoordX + x >= GameMaster.gm.mapGen.width)
-                    continue;
-
-                for (int y = 0; y < GameMaster.gm.lightSources[index].mobileLight.GetLength(0); y++)
+                for (int y = 0; y < source.mobileLight.SizeX; y++)
                 {
-                    if (mapCoordY + y < 0 || mapCoordY + y >= GameMaster.gm.mapGen.height * 2)
+                    if (!GameMaster.gm.isValidPositionNC(x + mapCoordX, y + mapCoordY))
                         continue;
 
-                    var newLight = GameMaster.gm.lightSources[index].mobileLight[x][y];
-                    if (newLight >= DinamicGetLightAll(mapCoordX + x, mapCoordY + y, index))
+                    var newLight = source.mobileLight[x, y];
+                    if (newLight == DinamicGetLightAll(mapCoordX + x, mapCoordY + y, source))
                         if (GetLightBlockingAmountAt(mapCoordX + x, mapCoordY + y) == 0.10f)
                             GameMaster.gm.Map[mapCoordX + x][mapCoordY + y].spriteRenderer.color = new Color(newLight, newLight, newLight);
                         else if (GetLightBlockingAmountAt(mapCoordX + x, mapCoordY + y) == 0f)
-                            GameMaster.gm.Map[mapCoordX + x][mapCoordY + y].spriteRenderer.color = new Color(newLight, newLight, newLight, 1 - newLight * 2);
+                            GameMaster.gm.Map[mapCoordX + x][mapCoordY + y].spriteRenderer.color = new Color(newLight, newLight, newLight, 1 - newLight);
                 }
             }
         }
 
-        public void ApplyFadeOutLight(int index)
+        public void ApplyFadeOutLight(LightSource source)
         {
-            var mapCoordX = GameMaster.gm.lightSources[index].MapPosX - GameMaster.gm.preRenderedLightOfSources[index].initCoord.x;
-            var mapCoordY = GameMaster.gm.lightSources[index].MapPosY - GameMaster.gm.preRenderedLightOfSources[index].initCoord.y;
+            var mapCoordX = source.MapPosX - source.mobileLight.SizeY / 2;
+            var mapCoordY = source.MapPosY - source.mobileLight.SizeY / 2;
 
-            for (int x = 0; x < GameMaster.gm.lightSources[index].fadeOutLight.GetLength(0); x++)
+            for (int x = 0; x < source.fadeOutLight.SizeX; x++)
             {
-                if (mapCoordY + x < 0 || mapCoordX + x >= GameMaster.gm.mapGen.width)
-                    continue;
-
-                for (int y = 0; y < GameMaster.gm.lightSources[index].fadeOutLight.GetLength(0); y++)
+                for (int y = 0; y < source.fadeOutLight.SizeX; y++)
                 {
-                    if (mapCoordY + y < 0 || mapCoordY + y >= GameMaster.gm.mapGen.height * 2)
+                    if (!GameMaster.gm.isValidPositionNC(x + mapCoordX, y + mapCoordY))
                         continue;
 
-                    var newLight = GameMaster.gm.lightSources[index].fadeOutLight[x][y];
-                    if (newLight >= DinamicGetLightAll(mapCoordX + x, mapCoordY + y, index))
+                    var newLight = source.fadeOutLight[x, y];
+                    if (newLight == DinamicGetLightAll(mapCoordX + x, mapCoordY + y, source))
                         if (GetLightBlockingAmountAt(mapCoordX + x, mapCoordY + y) == 0.10f)
                             GameMaster.gm.Map[mapCoordX + x][mapCoordY + y].spriteRenderer.color = new Color(newLight, newLight, newLight);
                         else if (GetLightBlockingAmountAt(mapCoordX + x, mapCoordY + y) == 0f)
-                            GameMaster.gm.Map[mapCoordX + x][mapCoordY + y].spriteRenderer.color = new Color(newLight, newLight, newLight, 1 - newLight * 2);
+                            GameMaster.gm.Map[mapCoordX + x][mapCoordY + y].spriteRenderer.color = new Color(newLight, newLight, newLight, 1 - newLight);
                 }
             }
         }
@@ -581,52 +558,50 @@ public class GameMaster : MonoBehaviour {
 
     public class PreRenderedLight
     {
-        public float[][] preRenderedLight;
+        public Unmanaged2DFloatMatrix preRenderedLight;
         public GameMaster.Coord initCoord;
         public float refPower;
 
         public void PreRender()
         {
-            for (int i = 3; i < preRenderedLight.GetLength(0) - 3; i++)
-                for (int j = 3; j < preRenderedLight.GetLength(0) - 3; j++)
+            for (int i = 3; i < preRenderedLight.SizeX - 3; i++)
+                for (int j = 3; j < preRenderedLight.SizeY - 3; j++)
                 {
-                    preRenderedLight[i][j] = refPower - Mathf.Sqrt(Mathf.Pow(i - initCoord.x, 2) + Mathf.Pow(j - initCoord.y, 2)) / 20;
+                    preRenderedLight[i, j] = refPower - Mathf.Sqrt(Mathf.Pow(i - initCoord.x, 2) + Mathf.Pow(j - initCoord.y, 2)) / 20;
                 }
         }
 
         public float GetLightAt(int coordX, int coordY)
         {
-            return preRenderedLight[coordX + initCoord.x][coordY + initCoord.y];
+            return preRenderedLight[coordX + initCoord.x, coordY + initCoord.y];
         }
     }
 
-    public void PreRenderLight(float Power)
+    public void PreRenderLight(float Power, LightSource source)
     {
         PreRenderedLight light = new PreRenderedLight();
 
         if ((int)(lightSources[lightSources.Count - 1].Power % 0.05f) % 2 == 0)
-            light.preRenderedLight = new float[(int)(Power * 40) + 1][];
+            light.preRenderedLight = new Unmanaged2DFloatMatrix((int)Power * 40 + 1, (int)Power * 40 + 1);
         else
-            light.preRenderedLight = new float[(int)(Power * 40)][];
+            light.preRenderedLight = new Unmanaged2DFloatMatrix((int)Power * 40, (int)Power * 40);
 
-        for (int i = 0; i < light.preRenderedLight.GetLength(0); i++)
-                light.preRenderedLight[i] = new float[light.preRenderedLight.GetLength(0)];
-
-        light.initCoord = new GameMaster.Coord((int)((light.preRenderedLight.GetLength(0) - 1) / 2), (int)((light.preRenderedLight.GetLength(0) - 1) / 2));
+        light.initCoord = new GameMaster.Coord((int)((light.preRenderedLight.SizeX - 1) / 2), (int)((light.preRenderedLight.SizeX - 1) / 2));
         light.refPower = Power;
         light.PreRender();
 
         preRenderedLightOfSources.Add(light);
+        source.preRenderedLight = light;
     }
 
     MapLight mapLight;
     
-    void applyLight(int curCoordX, int curCoordY, float encounteredWallness, int index, bool Stationary = true)
+    void applyLight(int curCoordX, int curCoordY, float encounteredWallness, LightSource source, bool Stationary = true)
     {
         if (!isValidPositionNC(curCoordX, curCoordY)) return;
 
         encounteredWallness += mapLight.GetLightBlockingAmountAt(curCoordX, curCoordY);
-        float newLight = preRenderedLightOfSources[index].GetLightAt(CoordOfCurLight.x - curCoordX, CoordOfCurLight.y - curCoordY) - encounteredWallness;
+        float newLight = source.preRenderedLight.GetLightAt(source.MapPosX - curCoordX, source.MapPosY - curCoordY) - encounteredWallness;
 
         if (newLight <= mapLight.GetLight(curCoordX, curCoordY)) return;
 
@@ -634,21 +609,21 @@ public class GameMaster : MonoBehaviour {
             mapLight.SetLight(curCoordX, curCoordY, newLight);
         else
         {
-            if (newLight <= mapLight.DinamicGetLight(curCoordX, curCoordY, index)) return;
+            if (newLight <= mapLight.DinamicGetLight(curCoordX, curCoordY, source)) return;
 
-            mapLight.DinamicSetLight(curCoordX, curCoordY, newLight, index);
+            mapLight.DinamicSetLight(curCoordX, curCoordY, newLight, source);
 
-            applyLight(curCoordX + 1, curCoordY, encounteredWallness, index, false);
-            applyLight(curCoordX, curCoordY + 1, encounteredWallness, index, false);
-            applyLight(curCoordX - 1, curCoordY, encounteredWallness, index, false);
-            applyLight(curCoordX, curCoordY - 1, encounteredWallness, index, false);
+            applyLight(curCoordX + 1, curCoordY, encounteredWallness, source, false);
+            applyLight(curCoordX, curCoordY + 1, encounteredWallness, source, false);
+            applyLight(curCoordX - 1, curCoordY, encounteredWallness, source, false);
+            applyLight(curCoordX, curCoordY - 1, encounteredWallness, source, false);
             return;
         }
 
-        applyLight(curCoordX + 1, curCoordY, encounteredWallness, index);
-        applyLight(curCoordX, curCoordY + 1, encounteredWallness, index);
-        applyLight(curCoordX - 1, curCoordY, encounteredWallness, index);
-        applyLight(curCoordX, curCoordY - 1, encounteredWallness, index);
+        applyLight(curCoordX + 1, curCoordY, encounteredWallness, source);
+        applyLight(curCoordX, curCoordY + 1, encounteredWallness, source);
+        applyLight(curCoordX - 1, curCoordY, encounteredWallness, source);
+        applyLight(curCoordX, curCoordY - 1, encounteredWallness, source);
     }
 
     #endregion
