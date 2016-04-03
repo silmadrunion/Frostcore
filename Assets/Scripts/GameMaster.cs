@@ -67,6 +67,8 @@ public class GameMaster : MonoBehaviour {
         MainMenu.GetComponent<Animator>().SetBool("Active", true);
         mapLight = new MapLight();
 
+        mainCam = Camera.main;
+
         preRenderedLightOfSources = new List<PreRenderedLight>();
 	}
 
@@ -160,17 +162,6 @@ public class GameMaster : MonoBehaviour {
                     Map[i][j].id = mapGen.map[i, j];
                 }
             }
-
-            PlaceSpawn(spawnPoint);
-            PlaceSpawn(mobSpawn1);
-            PlaceSpawn(mobSpawn2);
-            StartCoroutine(_RespawnPlayer());
-
-            Invoke("MakeMenuInactive", .1f);
-            isMenuActive = false;
-
-            LoadingScreen.SetActive(false);
-            gameIsStarting = false;
         }
 
         StartCoroutine(ShowThyMap());
@@ -179,14 +170,30 @@ public class GameMaster : MonoBehaviour {
                 yield return null;
             else break;
 
-        if (numberOfGens == 2)
-        {
-            HasGameStarted = true;
-        }
-
         lastSpawn = Time.time + spawnDelay;
 
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(1f);
+
+        LightMesh.Instance.GenerateMesh(0.5f);
+        colors = new Color[LightMesh.Instance.mesh.vertices.Length];
+
+        LightMesh.Instance.mesh.colors = colors;
+
+        yield return new WaitForSeconds(1f);
+
+        PlaceSpawn(spawnPoint);
+        PlaceSpawn(mobSpawn1);
+        PlaceSpawn(mobSpawn2);
+        StartCoroutine(_RespawnPlayer());
+
+
+        gameIsStarting = false;
+        HasGameStarted = true;
+
+        Invoke("MakeMenuInactive", .1f);
+        isMenuActive = false;
+
+        LoadingScreen.SetActive(false);
 
         yield break;
     }
@@ -216,6 +223,9 @@ public class GameMaster : MonoBehaviour {
         {
             for (int j = 0; j < mapGen.height * 2; j++)
             {
+                if (Map[i][j].id == 0)
+                    continue;
+
                 GameObject clone;
 
                 if (j > mapGen.height)
@@ -263,6 +273,8 @@ public class GameMaster : MonoBehaviour {
 
     #endregion
 
+    public Camera mainCam;
+
     void Update()
     {
         if (!HasGameStarted)
@@ -278,6 +290,8 @@ public class GameMaster : MonoBehaviour {
             playerposy *= -1;
             playerposy += mapGen.height;
         }
+
+        mapLight.ApplyLight();
 
         if (Time.time > lastSpawn)
             SpawnMobs();
@@ -338,13 +352,49 @@ public class GameMaster : MonoBehaviour {
 
         var size = source.fadeOutLight.SizeX;
 
+        bool markedAsFar = false;
+
         for (; ; )
         {
+            if(markedAsFar)
+            {
+                if(Mathf.Sqrt(Mathf.Pow(source.MapPosX - playerposx, 2) + Mathf.Pow(source.MapPosY - playerposy, 2)) < 50)
+                    markedAsFar = false;
+
+                source.UpdateMapPos();
+
+                yield return null;
+                continue;
+            }
+
+            if(!markedAsFar)
+            {
+                if (Mathf.Sqrt(Mathf.Pow(source.MapPosX - playerposx, 2) + Mathf.Pow(source.MapPosY - playerposy, 2)) > 50)
+                {
+                    markedAsFar = true;
+
+                    if (!source.Stationary)
+                        mapLight.ResetDinamicFadeOutMatrix(source);
+
+                    if (!source.Stationary)
+                        mapLight.ResetDinamicMatrix(source);
+
+                    continue;
+                }
+            }
+
             if (frame == 0)
             {
                 if (source == null)
                 {
+                    if (!source.Stationary)
+                        mapLight.ResetDinamicFadeOutMatrix(source);
+
+                    if (!source.Stationary)
+                        mapLight.ResetDinamicMatrix(source);
+
                     lightSources.Remove(source);
+
                     yield break;
                 }
 
@@ -363,35 +413,18 @@ public class GameMaster : MonoBehaviour {
                     applyLight(source.MapPosX, source.MapPosY, 0, source, false);
                 }
 
-                if (!source.Stationary)
-                    mapLight.ApplyLight(source);
-
                 frame++;
                 yield return null;
             }
 
             if (frame < 5)
             {
+                /*
                 if (!source.Stationary)
                     for (int x = 0; x < size; x++)
                         for (int y = 0; y < size; y++)
-                            source.fadeOutLight[x, y] -= 0.2f;
-
-                if (!source.Stationary)
-                    mapLight.ApplyFadeOutLight(source);
-
-                frame++;
-                yield return null;
-            }
-
-            if(frame == 4)
-            {
-                if (!source.Stationary)
-                    mapLight.ResetDinamicFadeOutMatrix(source);
-
-                if (!source.Stationary)
-                    mapLight.ApplyFadeOutLight(source);
-
+                            source.fadeOutLight[x, y] -= 0.1f;
+                */
                 frame++;
                 yield return null;
             }
@@ -402,10 +435,7 @@ public class GameMaster : MonoBehaviour {
                 if (!source.Stationary)
                     for (int x = 0; x < size; x++)
                         for (int y = 0; y < size; y++)
-                            source.fadeOutLight[x, y] = source.mobileLight[x, y] - 0.4f;
-
-                if (!source.Stationary)
-                    mapLight.ApplyFadeOutLight(source);
+                            source.fadeOutLight[x, y] = source.mobileLight[x, y];
 
                 if (!source.Stationary)
                     mapLight.ResetDinamicMatrix(source);
@@ -420,6 +450,8 @@ public class GameMaster : MonoBehaviour {
 
     public List<LightSource> lightSources;
     public List<PreRenderedLight> preRenderedLightOfSources;
+
+    Color[] colors;
 
     public class MapLight
     {
@@ -486,7 +518,7 @@ public class GameMaster : MonoBehaviour {
             return source.fadeOutLight[X, Y];
         }
 
-        public float DinamicGetLightAll(int coordX, int coordY, LightSource source)
+        public float DinamicGetLightAll(int coordX, int coordY)
         {
             var maxValue = GetLight(coordX, coordY);
 
@@ -506,48 +538,37 @@ public class GameMaster : MonoBehaviour {
             return maxValue;
         }
 
-        public void ApplyLight(LightSource source)
+        public void ApplyLight()
         {
-            var mapCoordX = source.MapPosX - source.mobileLight.SizeY / 2;
-            var mapCoordY = source.MapPosY - source.mobileLight.SizeY / 2;
+            var cameraCoordX = (int)(GameMaster.gm.mainCam.transform.position.x * 2);
+            var cameraCoordY = (int)(GameMaster.gm.mainCam.transform.position.y * 2);
 
-            for (int x = 0; x < source.mobileLight.SizeX; x++)
+            if (cameraCoordY >= 0)
+                cameraCoordY = GameMaster.gm.mapGen.height - cameraCoordY;
+            else
             {
-                for (int y = 0; y < source.mobileLight.SizeX; y++)
+                cameraCoordY *= -1;
+                cameraCoordY += GameMaster.gm.mapGen.height;
+            }
+
+            for (int x = cameraCoordX - 45; x < cameraCoordX + 45; x++)
+            {
+                for (int y = cameraCoordY - 25; y < cameraCoordY + 25; y++)
                 {
-                    if (!GameMaster.gm.isValidPositionNC(x + mapCoordX, y + mapCoordY))
+                    if (!GameMaster.gm.isValidPositionNC(x ,y))
                         continue;
 
-                    var newLight = source.mobileLight[x, y];
-                    if (newLight == DinamicGetLightAll(mapCoordX + x, mapCoordY + y, source))
-                        if (GetLightBlockingAmountAt(mapCoordX + x, mapCoordY + y) == 0.10f)
-                            GameMaster.gm.Map[mapCoordX + x][mapCoordY + y].spriteRenderer.color = new Color(newLight, newLight, newLight);
-                        else if (GetLightBlockingAmountAt(mapCoordX + x, mapCoordY + y) == 0f)
-                            GameMaster.gm.Map[mapCoordX + x][mapCoordY + y].spriteRenderer.color = new Color(newLight, newLight, newLight, 1 - newLight);
+                    var newLight = DinamicGetLightAll(x, y);
+                    /*if (GetLightBlockingAmountAt(x, y) == 0.10f)
+                        GameMaster.gm.Map[x][y].spriteRenderer.color = new Color32((byte)(newLight * 255), (byte)(newLight * 255), (byte)(newLight * 255), 255);
+                    else if (GetLightBlockingAmountAt(x, y) == 0f)
+                        GameMaster.gm.Map[x][y].spriteRenderer.color = new Color32((byte)(newLight * 255), (byte)(newLight * 255), (byte)(newLight * 255), (byte)(255 - (newLight * 255)));*/
+
+                    GameMaster.gm.colors[x * GameMaster.gm.mapGen.height * 2 + y] = new Color(1 - newLight, 1 - newLight, 1 - newLight, 1 - newLight);
                 }
             }
-        }
 
-        public void ApplyFadeOutLight(LightSource source)
-        {
-            var mapCoordX = source.MapPosX - source.mobileLight.SizeY / 2;
-            var mapCoordY = source.MapPosY - source.mobileLight.SizeY / 2;
-
-            for (int x = 0; x < source.fadeOutLight.SizeX; x++)
-            {
-                for (int y = 0; y < source.fadeOutLight.SizeX; y++)
-                {
-                    if (!GameMaster.gm.isValidPositionNC(x + mapCoordX, y + mapCoordY))
-                        continue;
-
-                    var newLight = source.fadeOutLight[x, y];
-                    if (newLight == DinamicGetLightAll(mapCoordX + x, mapCoordY + y, source))
-                        if (GetLightBlockingAmountAt(mapCoordX + x, mapCoordY + y) == 0.10f)
-                            GameMaster.gm.Map[mapCoordX + x][mapCoordY + y].spriteRenderer.color = new Color(newLight, newLight, newLight);
-                        else if (GetLightBlockingAmountAt(mapCoordX + x, mapCoordY + y) == 0f)
-                            GameMaster.gm.Map[mapCoordX + x][mapCoordY + y].spriteRenderer.color = new Color(newLight, newLight, newLight, 1 - newLight);
-                }
-            }
+            LightMesh.Instance.mesh.colors = GameMaster.gm.colors;
         }
 
         public float GetLightBlockingAmountAt(int coordX, int coordY)
