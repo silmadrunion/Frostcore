@@ -38,8 +38,17 @@ public class P2DI_PlaceBlock : MonoBehaviour
 
             GameMaster.gm.Map[(int)placePosition.x][(int)placePosition.y].id = block.GetComponent<BlockBreak>().id;
             Destroy(GameMaster.gm.Map[(int)placePosition.x][(int)placePosition.y].clone);
-            GameMaster.gm.Map[(int)placePosition.x][(int)placePosition.y].clone = null;
-            GameMaster.gm.Map[(int)placePosition.x][(int)placePosition.y].shown = false;
+
+            GameObject clone;
+
+            if (placePosition.y > GameMaster.gm.mapGen.height)
+                clone = Instantiate(Resources.Load("Prefabs/" + GameMaster.gm.Map[(int)placePosition.x][(int)placePosition.y].id.ToString(), typeof(GameObject)), new Vector3((float)placePosition.x / 2, (float)-((int)placePosition.y - GameMaster.gm.mapGen.height) / 2), Quaternion.identity) as GameObject;
+            else
+                clone = Instantiate(Resources.Load("Prefabs/" + GameMaster.gm.Map[(int)placePosition.x][(int)placePosition.y].id.ToString(), typeof(GameObject)), new Vector3((float)placePosition.x / 2, GameMaster.gm.mapGen.height / 2 - (float)placePosition.y / 2), Quaternion.identity) as GameObject;
+
+            GameMaster.gm.Map[(int)placePosition.x][(int)placePosition.y].clone = clone;
+            GameMaster.gm.Map[(int)placePosition.x][(int)placePosition.y].blockingAmount = 0.10f;
+            GameMaster.gm.Map[(int)placePosition.x][(int)placePosition.y].spriteRenderer = clone.GetComponent<SpriteRenderer>();
         }
     }
 
