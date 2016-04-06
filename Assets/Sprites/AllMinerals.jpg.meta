@@ -1,6 +1,6 @@
 fileFormatVersion: 2
 guid: 5727c03c4a9ca04428f9a6a9cd224c98
-timeCreated: 1457100972
+timeCreated: 1459962771
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
@@ -222,19 +222,19 @@ TextureImporter:
         serializedVersion: 2
         x: 154
         y: 868
-        width: 61
+        width: 64
         height: 64
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline:
-      - - {x: -28.5, y: 27}
-        - {x: -30.5, y: 25}
-        - {x: -30.5, y: -32}
-        - {x: 30.5, y: -32}
-        - {x: 30.5, y: -19}
-        - {x: 12.5, y: 2}
-        - {x: -12.5, y: 27}
+      - - {x: -32, y: -32}
+        - {x: 31, y: -32}
+        - {x: 31, y: -25}
+        - {x: 16, y: 6}
+        - {x: -11, y: 27}
+        - {x: -30, y: 27}
+        - {x: -32, y: 25}
     - name: AllMinerals_9
       rect:
         serializedVersion: 2
@@ -485,24 +485,24 @@ TextureImporter:
         serializedVersion: 2
         x: 151
         y: 656
-        width: 61
+        width: 64
         height: 64
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline:
-      - - {x: -18.5, y: 32}
-        - {x: -30.5, y: 25}
-        - {x: -30.5, y: -32}
-        - {x: 30.5, y: -32}
-        - {x: 30.5, y: 19}
-        - {x: 27.5, y: 32}
-      - - {x: 13.5, y: -1}
-        - {x: 13.5, y: -8}
-        - {x: 21.5, y: -8}
-        - {x: 22.5, y: -6}
-        - {x: 21.5, y: -3}
-        - {x: 17.5, y: -1}
+      - - {x: -28, y: 32}
+        - {x: -32, y: 27}
+        - {x: -32, y: -32}
+        - {x: 31, y: -32}
+        - {x: 31, y: 29}
+        - {x: 22, y: 32}
+      - - {x: 12, y: -1}
+        - {x: 12, y: -8}
+        - {x: 20, y: -8}
+        - {x: 21, y: -6}
+        - {x: 20, y: -3}
+        - {x: 16, y: -1}
     - name: AllMinerals_24
       rect:
         serializedVersion: 2

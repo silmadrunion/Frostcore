@@ -352,14 +352,12 @@ public class GameMaster : MonoBehaviour {
 
         var size = source.fadeOutLight.SizeX;
 
-        bool markedAsFar = false;
-
         for (; ; )
         {
-            if(markedAsFar)
+            if(source.markedAsFar)
             {
                 if(Mathf.Sqrt(Mathf.Pow(source.MapPosX - playerposx, 2) + Mathf.Pow(source.MapPosY - playerposy, 2)) < 50)
-                    markedAsFar = false;
+                    source.markedAsFar = false;
 
                 source.UpdateMapPos();
 
@@ -367,11 +365,11 @@ public class GameMaster : MonoBehaviour {
                 continue;
             }
 
-            if(!markedAsFar)
+            if (!source.markedAsFar)
             {
                 if (Mathf.Sqrt(Mathf.Pow(source.MapPosX - playerposx, 2) + Mathf.Pow(source.MapPosY - playerposy, 2)) > 50)
                 {
-                    markedAsFar = true;
+                    source.markedAsFar = true;
 
                     if (!source.Stationary)
                         mapLight.ResetDinamicFadeOutMatrix(source);
@@ -419,12 +417,6 @@ public class GameMaster : MonoBehaviour {
 
             if (frame < 5)
             {
-                /*
-                if (!source.Stationary)
-                    for (int x = 0; x < size; x++)
-                        for (int y = 0; y < size; y++)
-                            source.fadeOutLight[x, y] -= 0.1f;
-                */
                 frame++;
                 yield return null;
             }
@@ -509,7 +501,7 @@ public class GameMaster : MonoBehaviour {
 
         public float DinamicGetFadeOutLight(int coordX, int coordY, LightSource source)
         {
-            var X = coordX - source.antMapPosX + source.mobileLight.SizeY / 2;
+            var X = coordX - source.antMapPosX + source.mobileLight.SizeX / 2;
             var Y = coordY - source.antMapPosY + source.mobileLight.SizeY / 2;
 
             if (X < 0 || X >= source.mobileLight.SizeX - 1 || Y < 0 || Y >= source.mobileLight.SizeY - 1)
@@ -527,6 +519,15 @@ public class GameMaster : MonoBehaviour {
                 if (GameMaster.gm.lightSources[i].Stationary)
                     continue;
 
+                if (GameMaster.gm.lightSources[i].markedAsFar)
+                    continue;
+
+                if (GameMaster.gm.lightSources[i].Power <= maxValue)
+                    continue;
+
+                if (maxValue >= 1)
+                    return maxValue;
+
                 if (DinamicGetLight(coordX, coordY, GameMaster.gm.lightSources[i]) > maxValue)
                     maxValue = DinamicGetLight(coordX, coordY, GameMaster.gm.lightSources[i]);
 
@@ -540,6 +541,8 @@ public class GameMaster : MonoBehaviour {
 
         public void ApplyLight()
         {
+            LightMesh.Instance.UpdateMapPos();
+
             var cameraCoordX = (int)(GameMaster.gm.mainCam.transform.position.x * 2);
             var cameraCoordY = (int)(GameMaster.gm.mainCam.transform.position.y * 2);
 
@@ -559,12 +562,7 @@ public class GameMaster : MonoBehaviour {
                         continue;
 
                     var newLight = DinamicGetLightAll(x, y);
-                    /*if (GetLightBlockingAmountAt(x, y) == 0.10f)
-                        GameMaster.gm.Map[x][y].spriteRenderer.color = new Color32((byte)(newLight * 255), (byte)(newLight * 255), (byte)(newLight * 255), 255);
-                    else if (GetLightBlockingAmountAt(x, y) == 0f)
-                        GameMaster.gm.Map[x][y].spriteRenderer.color = new Color32((byte)(newLight * 255), (byte)(newLight * 255), (byte)(newLight * 255), (byte)(255 - (newLight * 255)));*/
-
-                    GameMaster.gm.colors[x * GameMaster.gm.mapGen.height * 2 + y] = new Color(1 - newLight, 1 - newLight, 1 - newLight, 1 - newLight);
+                    GameMaster.gm.colors[(x - LightMesh.Instance.MapPosX + 50) * 50 + y - LightMesh.Instance.MapPosY + 25] = new Color(1 - newLight, 1 - newLight, 1 - newLight, 1 - newLight);
                 }
             }
 
@@ -603,9 +601,9 @@ public class GameMaster : MonoBehaviour {
         PreRenderedLight light = new PreRenderedLight();
 
         if ((int)(lightSources[lightSources.Count - 1].Power % 0.05f) % 2 == 0)
-            light.preRenderedLight = new Unmanaged2DFloatMatrix((int)Power * 40 + 1, (int)Power * 40 + 1);
+            light.preRenderedLight = new Unmanaged2DFloatMatrix((int)(Power * 40) + 1, (int)(Power * 40) + 1);
         else
-            light.preRenderedLight = new Unmanaged2DFloatMatrix((int)Power * 40, (int)Power * 40);
+            light.preRenderedLight = new Unmanaged2DFloatMatrix((int)(Power * 40), (int)(Power * 40));
 
         light.initCoord = new GameMaster.Coord((int)((light.preRenderedLight.SizeX - 1) / 2), (int)((light.preRenderedLight.SizeX - 1) / 2));
         light.refPower = Power;

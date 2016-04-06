@@ -9,6 +9,7 @@ public class LightMesh : MonoBehaviour
     void Start()
     {
         Instance = this;
+        mainCamera = Camera.main;
     }
 
     public SquareGrid squareGrid;
@@ -22,10 +23,24 @@ public class LightMesh : MonoBehaviour
     List<List<int>> outlines = new List<List<int>>();
     HashSet<int> checkedVertices = new HashSet<int>();
 
+    public int MapPosX;
+    public int MapPosY;
+
+    Camera mainCamera;
+
+    public void UpdateMapPos()
+    {
+        transform.position = new Vector3((int)mainCamera.transform.position.x, (int)mainCamera.transform.position.y, (int)mainCamera.transform.position.z + 5);
+
+        MapPosX = (int)(transform.position.x * 2);
+        if ((int)(transform.position.y * 2) >= 0)
+            MapPosY = GameMaster.gm.mapGen.height - (int)(transform.position.y * 2);
+        else
+            MapPosY = ((int)(transform.position.y * 2) * -1) + GameMaster.gm.mapGen.height;
+    }
+
     public void GenerateMesh(float squareSize)
     {
-        transform.position = new Vector3((float)GameMaster.gm.mapGen.width / 4, 0, -1);
-
         triangleDictionary.Clear();
         outlines.Clear();
         checkedVertices.Clear();
@@ -218,8 +233,8 @@ public class LightMesh : MonoBehaviour
 
         public SquareGrid(float squareSize)
         {
-            int nodeCountX = GameMaster.gm.mapGen.width;
-            int nodeCountY = GameMaster.gm.mapGen.height * 2;
+            int nodeCountX = 100;
+            int nodeCountY = 50;
             float mapWidth = nodeCountX * squareSize;
             float mapHeight = nodeCountY * squareSize;
 
