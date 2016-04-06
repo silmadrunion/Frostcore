@@ -13,6 +13,9 @@ public class LightSource : MonoBehaviour
 
     public bool Stationary = true;
     public bool Added = false;
+
+    public bool markedAsFar = false;
+
     public Unmanaged2DFloatMatrix mobileLight;
     public Unmanaged2DFloatMatrix fadeOutLight;
 
@@ -38,9 +41,9 @@ public class LightSource : MonoBehaviour
         if (!Stationary)
         {
             if ((int)(Power % 0.05f) % 2 == 0)
-                mobileLight = new Unmanaged2DFloatMatrix((int)Power * 40 + 5, (int)Power * 40 + 5);
+                mobileLight = new Unmanaged2DFloatMatrix((int)(Power * 40) + 5, (int)(Power * 40) + 5);
             else
-                mobileLight = new Unmanaged2DFloatMatrix((int)Power * 40 + 4, (int)Power * 40 + 4);
+                mobileLight = new Unmanaged2DFloatMatrix((int)(Power * 40) + 4, (int)(Power * 40) + 4);
 
             fadeOutLight = new Unmanaged2DFloatMatrix(mobileLight.SizeX, mobileLight.SizeY);
         }
