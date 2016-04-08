@@ -354,19 +354,6 @@ public class GameMaster : MonoBehaviour {
 
         for (; ; )
         {
-            if (source == null)
-            {
-                if (!source.Stationary)
-                    mapLight.ResetDinamicFadeOutMatrix(source);
-
-                if (!source.Stationary)
-                    mapLight.ResetDinamicMatrix(source);
-
-                lightSources.Remove(source);
-
-                yield break;
-            }
-
             if(source.markedAsFar)
             {
                 if(Mathf.Sqrt(Mathf.Pow(source.MapPosX - playerposx, 2) + Mathf.Pow(source.MapPosY - playerposy, 2)) < 50)
@@ -613,7 +600,7 @@ public class GameMaster : MonoBehaviour {
         source.preRenderedLight = light;
     }
 
-    MapLight mapLight;
+    public MapLight mapLight;
     
     void applyLight(int curCoordX, int curCoordY, float encounteredWallness, LightSource source, bool Stationary = true)
     {
