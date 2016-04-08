@@ -354,6 +354,19 @@ public class GameMaster : MonoBehaviour {
 
         for (; ; )
         {
+            if (source == null)
+            {
+                if (!source.Stationary)
+                    mapLight.ResetDinamicFadeOutMatrix(source);
+
+                if (!source.Stationary)
+                    mapLight.ResetDinamicMatrix(source);
+
+                lightSources.Remove(source);
+
+                yield break;
+            }
+
             if(source.markedAsFar)
             {
                 if(Mathf.Sqrt(Mathf.Pow(source.MapPosX - playerposx, 2) + Mathf.Pow(source.MapPosY - playerposy, 2)) < 50)
@@ -383,19 +396,6 @@ public class GameMaster : MonoBehaviour {
 
             if (frame == 0)
             {
-                if (source == null)
-                {
-                    if (!source.Stationary)
-                        mapLight.ResetDinamicFadeOutMatrix(source);
-
-                    if (!source.Stationary)
-                        mapLight.ResetDinamicMatrix(source);
-
-                    lightSources.Remove(source);
-
-                    yield break;
-                }
-
                 if (source.Added && source.Stationary)
                     continue;
 
@@ -586,7 +586,7 @@ public class GameMaster : MonoBehaviour {
             for (int i = 3; i < preRenderedLight.SizeX - 3; i++)
                 for (int j = 3; j < preRenderedLight.SizeY - 3; j++)
                 {
-                    preRenderedLight[i, j] = refPower - Mathf.Sqrt(Mathf.Pow(i - initCoord.x, 2) + Mathf.Pow(j - initCoord.y, 2)) / 20;
+                    preRenderedLight[i, j] = refPower - Mathf.Sqrt(Mathf.Pow(i - initCoord.x, 2) + Mathf.Pow(j - initCoord.y, 2)) / 15;
                 }
         }
 
