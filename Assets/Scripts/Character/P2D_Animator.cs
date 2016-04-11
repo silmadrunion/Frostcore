@@ -70,7 +70,6 @@ public class P2D_Animator : MonoBehaviour
     public void HoldGun(bool holdGun)
     {
         m_Animator.SetBool("HoldGun", holdGun);
-
         if (holdGun)
             ArmRotation.Instance.UpdateArmRotation();
         else
