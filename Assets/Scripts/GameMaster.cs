@@ -39,7 +39,7 @@ public class GameMaster : MonoBehaviour {
     public GameObject FPSCounter;
     public bool ShowFpsCounter;
     public GameObject MainMenu;
-    bool isMenuActive = false;
+    public bool isMenuActive = false;
 
     public GameObject LoadingScreen;
     public bool gameIsStarting = false;
@@ -280,22 +280,6 @@ public class GameMaster : MonoBehaviour {
         if (!HasGameStarted)
             return;
 
-        playerposx = (int)(m_Player.position.x * 2);
-        playerposy = (int)(m_Player.position.y * 2);
-
-        if (playerposy >= 0)
-            playerposy = mapGen.height - playerposy;
-        else
-        {
-            playerposy *= -1;
-            playerposy += mapGen.height;
-        }
-
-        mapLight.ApplyLight();
-
-        if (Time.time > lastSpawn)
-            SpawnMobs();
-
         if (Input.GetKeyDown(KeyCode.Escape))
             if (isMenuActive)
             {
@@ -314,6 +298,9 @@ public class GameMaster : MonoBehaviour {
                 MainMenu.transform.FindChild("Background").GetComponent<Canvas>().sortingOrder = -2;
 
                 PlayerInfo.SetActive(false);
+                InventoryDisplay.Instance.InventoryUIReference.gameObject.SetActive(false);
+                InventoryDisplay.Instance.displayInventory = false;
+                Inventory.Instance.draggedItem.ClearDraggedItem();
                 Hotbar.SetActive(false);
 
                 if (ShowFpsCounter)
@@ -321,6 +308,25 @@ public class GameMaster : MonoBehaviour {
 
                 Time.timeScale = 0f;
             }
+
+        if (isMenuActive)
+            return;
+
+        playerposx = (int)(m_Player.position.x * 2);
+        playerposy = (int)(m_Player.position.y * 2);
+
+        if (playerposy >= 0)
+            playerposy = mapGen.height - playerposy;
+        else
+        {
+            playerposy *= -1;
+            playerposy += mapGen.height;
+        }
+
+        mapLight.ApplyLight();
+
+        if (Time.time > lastSpawn)
+            SpawnMobs();
     }
 
     public bool isValidPosition(Coord coord)
@@ -354,19 +360,6 @@ public class GameMaster : MonoBehaviour {
 
         for (; ; )
         {
-            if (source == null)
-            {
-                if (!source.Stationary)
-                    mapLight.ResetDinamicFadeOutMatrix(source);
-
-                if (!source.Stationary)
-                    mapLight.ResetDinamicMatrix(source);
-
-                lightSources.Remove(source);
-
-                yield break;
-            }
-
             if(source.markedAsFar)
             {
                 if(Mathf.Sqrt(Mathf.Pow(source.MapPosX - playerposx, 2) + Mathf.Pow(source.MapPosY - playerposy, 2)) < 50)
@@ -613,7 +606,7 @@ public class GameMaster : MonoBehaviour {
         source.preRenderedLight = light;
     }
 
-    MapLight mapLight;
+    public MapLight mapLight;
     
     void applyLight(int curCoordX, int curCoordY, float encounteredWallness, LightSource source, bool Stationary = true)
     {

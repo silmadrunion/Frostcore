@@ -52,4 +52,25 @@ public class LightSource : MonoBehaviour
         GameMaster.gm.PreRenderLight(Power, this);
         StartCoroutine(GameMaster.gm.UpdateLight(this));
     }
+
+    void OnDestroy()
+    {
+        if (!Stationary)
+            GameMaster.gm.mapLight.ResetDinamicFadeOutMatrix(this);
+
+        if (!Stationary)
+            GameMaster.gm.mapLight.ResetDinamicMatrix(this);
+
+        GameMaster.gm.lightSources.Remove(this);
+    }
+
+    void OnDisable()
+    {
+        OnDestroy();
+    }
+
+    void OnEnable()
+    {
+        Start();
+    }
 }

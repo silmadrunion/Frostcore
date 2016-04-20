@@ -1,97 +1,177 @@
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using System.Collections;
-[AddComponentMenu("Inventory/Character Sheet")]
-[RequireComponent(typeof(Inventory))]
+using System.Collections.Generic;
+using System.Linq;
+
 public class Character : MonoBehaviour
 {
+    /// <summary>
+    /// Instance for quick access
+    /// </summary>
     public static Character Instance;
 
-    public Item[] WeaponSlot; //This is where the Weapons are going to go (be parented too). In my case it's the "Melee" gameobject.
-    public GameObject[] Weapons;
-
-    public Item[] ArmorSlot; //This is the built in Array that stores the Items equipped. You can change this to static if you want to access it from another script.
-
-    public Transform WeaponHolder;
-
-    //These are keeping track of components such as equipmentEffects and Audio.
-    private Inventory playersinv; //Refers to the Inventory script.
-    private InvAudio invAudio;
-
-    public int ItemEquippedNR;
-
-    //Assign the differnet components to variables and other "behind the scenes" stuff.
-    void Awake()
+    void Start()
     {
         Instance = this;
 
-        playersinv = GetComponent<Inventory>();
-
-        invAudio = GetComponent<InvAudio>();
+        ItemsInWeaponSlots = new Item[4];
     }
 
-    //Take care of the array lengths.
-    void Start()
+    public Item[] ItemsInWeaponSlots;
+    public Item[] ItemsInArmorSlots;
+
+    public RectTransform[] WeaponSlots;
+    public RectTransform[] ArmorSlots;
+
+    public int WeaponInUseIndex;
+
+    public Transform WeaponHolder;
+
+    void Update()
     {
-        ArmorSlot = new Item[3];
-        Weapons = new GameObject[4];
-        WeaponSlot = new Item[4];
+        if (!InventoryDisplay.Instance.displayInventory)
+            return;
 
-        if (WeaponHolder == null)
-            Debug.LogError("No weapon holder");
-
-        UpdateEquipment();
-    }
-
-    public void UpdateEquipment()
-    {
-        int i;
-        for (i = 0; i < WeaponHolder.childCount; i++)
+        if(Input.GetKeyDown(KeyCode.Mouse0))
         {
-            Destroy(WeaponHolder.GetChild(i).gameObject);
-            Weapons[i] = null;
-        }
-        i = 0;
-        foreach (Item Weapon in WeaponSlot)
-        {
-            if (Weapon == null)
+            if(Inventory.Instance.draggedItem.isAnItemDragged)
             {
-                i++;
-                continue;
-            }
+                if(EventSystem.current.currentSelectedGameObject != null)
+                {
+                    var draggedItemIndex = Inventory.Instance.draggedItem.indexInContents;
 
-            Weapons[i] = (GameObject) Instantiate(Weapon.equippedWeaponVersion, Vector3.zero, Quaternion.identity);
+                    if (EventSystem.current.currentSelectedGameObject.name == "Melee1" && IsRightType(Inventory.Instance.Contents[draggedItemIndex], Item.ItemType.Tool, Item.ItemType.Weapon))
+                    {
+                        ItemsInWeaponSlots[0] = Inventory.Instance.Contents[draggedItemIndex];
+                        Inventory.Instance.DropItem(Inventory.Instance.Contents[draggedItemIndex]);
+                        Inventory.Instance.draggedItem.ClearDraggedItem();
 
-            if (Weapons[i] == null)
-                Debug.Log("Weapons is null");
+                        UpdateEquipment();
+                    }
+                    else if (EventSystem.current.currentSelectedGameObject.name == "Melee2" && IsRightType(Inventory.Instance.Contents[draggedItemIndex], Item.ItemType.Tool, Item.ItemType.Weapon))
+                    {
+                        ItemsInWeaponSlots[1] = Inventory.Instance.Contents[draggedItemIndex];
+                        Inventory.Instance.DropItem(Inventory.Instance.Contents[draggedItemIndex]);
+                        Inventory.Instance.draggedItem.ClearDraggedItem();
 
-            Weapons[i].transform.parent = WeaponHolder;
-            Weapons[i].transform.localRotation = Weapon.equippedWeaponVersion.transform.localRotation;
-            Weapons[i].transform.localPosition = Weapon.equippedWeaponVersion.transform.localPosition;
-            Weapons[i].transform.localScale = Weapon.equippedWeaponVersion.transform.localScale;
+                        UpdateEquipment();
+                    }
+                    else if (EventSystem.current.currentSelectedGameObject.name == "Ranged1" && IsRightType(Inventory.Instance.Contents[draggedItemIndex], Item.ItemType.Gun))
+                    {
+                        ItemsInWeaponSlots[2] = Inventory.Instance.Contents[draggedItemIndex];
+                        Inventory.Instance.DropItem(Inventory.Instance.Contents[draggedItemIndex]);
+                        Inventory.Instance.draggedItem.ClearDraggedItem();
 
-            if (i == ItemEquippedNR)
-            {
-                MakeItemActive(Weapons[i]);
-                if (P2D_Controller.Instance.ItemBeingHeld != null)
-                    Destroy(P2D_Controller.Instance.ItemBeingHeld.gameObject);
-                P2D_Controller.Instance.ItemBeingHeld = Weapons[i].transform;
+                        UpdateEquipment();
+                    }
+                    else if (EventSystem.current.currentSelectedGameObject.name == "Ranged2" && IsRightType(Inventory.Instance.Contents[draggedItemIndex], Item.ItemType.Gun))
+                    {
+                        ItemsInWeaponSlots[3] = Inventory.Instance.Contents[draggedItemIndex];
+                        Inventory.Instance.DropItem(Inventory.Instance.Contents[draggedItemIndex]);
+                        Inventory.Instance.draggedItem.ClearDraggedItem();
+
+                        UpdateEquipment();
+                    }
+
+                    InventoryDisplay.Instance.UpdateInventoryList();
+                }
             }
             else
-                MakeItemInactive(Weapons[i]);
+            {
+                if(EventSystem.current.currentSelectedGameObject != null)
+                {
+                    if (EventSystem.current.currentSelectedGameObject.name == "Melee1")
+                    {
+                        if (ItemsInWeaponSlots[0] != null)
+                            Inventory.Instance.Contents.Add(ItemsInWeaponSlots[0]);
 
-            i++;
+                        ItemsInWeaponSlots[0] = null;
+
+                        UpdateEquipment();
+                    }
+                    else if (EventSystem.current.currentSelectedGameObject.name == "Melee2")
+                    {
+                        if (ItemsInWeaponSlots[1] != null)
+                            Inventory.Instance.Contents.Add(ItemsInWeaponSlots[1]);
+
+                        ItemsInWeaponSlots[1] = null;
+
+                        UpdateEquipment();
+                    }
+                    else if (EventSystem.current.currentSelectedGameObject.name == "Ranged1")
+                    {
+                        if (ItemsInWeaponSlots[2] != null)
+                            Inventory.Instance.Contents.Add(ItemsInWeaponSlots[2]);
+
+                        ItemsInWeaponSlots[2] = null;
+
+                        UpdateEquipment();
+                    }
+                    else if (EventSystem.current.currentSelectedGameObject.name == "Ranged2")
+                    {
+                        if (ItemsInWeaponSlots[3] != null)
+                            Inventory.Instance.Contents.Add(ItemsInWeaponSlots[3]);
+
+                        ItemsInWeaponSlots[3] = null;
+
+                        UpdateEquipment();
+                    }
+                }
+
+                InventoryDisplay.Instance.UpdateInventoryList();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Checks if the item has the searched type
+    /// </summary>
+    /// <param name="item"> The item that is checked </param>
+    /// <param name="acceptedTypes"> The accepted types </param>
+    /// <returns> true || false </returns>
+    public bool IsRightType(Item item, params Item.ItemType[] acceptedTypes)
+    {
+        IEnumerable<Item.ItemType> fitTypes = from value in acceptedTypes
+                                              where value == item.itemType
+                                              select value;
+
+        return fitTypes.Count<Item.ItemType>() > 0;
+    }
+
+    /// <summary>
+    /// Updates the equipped weapon and armor versions of the currently used items
+    /// </summary>
+    public void UpdateEquipment()
+    {
+        for(int index = 0; index < 4; index++)
+            if (ItemsInWeaponSlots[index] != null)
+            {
+                WeaponSlots[index].GetChild(0).GetComponent<Image>().sprite = ItemsInWeaponSlots[index].Icon;
+                WeaponSlots[index].GetChild(0).GetComponent<Image>().color = Color.white;
+            }
+            else
+                WeaponSlots[index].GetChild(0).GetComponent<Image>().color = Color.clear;
+
+        for (int index = 0; index < WeaponHolder.childCount; index++)
+            Destroy(WeaponHolder.GetChild(index).gameObject);
+
+        if (ItemsInWeaponSlots[WeaponInUseIndex] != null)
+        {
+            InstantiateWeapon(ItemsInWeaponSlots[WeaponInUseIndex]);
+            P2D_Controller.Instance.ItemBeingHeld = WeaponHolder.GetChild(0);
         }
 
-        // TODO: Armor equip
+        //TODO: Armors
     }
 
-    public void MakeItemInactive(GameObject item)
+    void InstantiateWeapon(Item item)
     {
-        item.SetActive(false);
-    }
+        GameObject clone = Instantiate(item.EquippedPrefab) as GameObject;
 
-    public void MakeItemActive(GameObject item)
-    {
-        item.SetActive(true);
+        clone.transform.parent = WeaponHolder;
+        clone.transform.localPosition = Vector3.zero;
+        clone.transform.localScale = Vector3.one * 2;
     }
 }
