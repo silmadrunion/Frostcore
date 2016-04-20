@@ -45,7 +45,7 @@ public class Character : MonoBehaviour
                     if (EventSystem.current.currentSelectedGameObject.name == "Melee1" && IsRightType(Inventory.Instance.Contents[draggedItemIndex], Item.ItemType.Tool, Item.ItemType.Weapon))
                     {
                         ItemsInWeaponSlots[0] = Inventory.Instance.Contents[draggedItemIndex];
-                        Inventory.Instance.DropItem(Inventory.Instance.Contents[draggedItemIndex]);
+                        Inventory.Instance.Contents.Remove(Inventory.Instance.Contents[draggedItemIndex]);
                         Inventory.Instance.draggedItem.ClearDraggedItem();
 
                         UpdateEquipment();
@@ -53,7 +53,7 @@ public class Character : MonoBehaviour
                     else if (EventSystem.current.currentSelectedGameObject.name == "Melee2" && IsRightType(Inventory.Instance.Contents[draggedItemIndex], Item.ItemType.Tool, Item.ItemType.Weapon))
                     {
                         ItemsInWeaponSlots[1] = Inventory.Instance.Contents[draggedItemIndex];
-                        Inventory.Instance.DropItem(Inventory.Instance.Contents[draggedItemIndex]);
+                        Inventory.Instance.Contents.Remove(Inventory.Instance.Contents[draggedItemIndex]);
                         Inventory.Instance.draggedItem.ClearDraggedItem();
 
                         UpdateEquipment();
@@ -61,7 +61,7 @@ public class Character : MonoBehaviour
                     else if (EventSystem.current.currentSelectedGameObject.name == "Ranged1" && IsRightType(Inventory.Instance.Contents[draggedItemIndex], Item.ItemType.Gun))
                     {
                         ItemsInWeaponSlots[2] = Inventory.Instance.Contents[draggedItemIndex];
-                        Inventory.Instance.DropItem(Inventory.Instance.Contents[draggedItemIndex]);
+                        Inventory.Instance.Contents.Remove(Inventory.Instance.Contents[draggedItemIndex]);
                         Inventory.Instance.draggedItem.ClearDraggedItem();
 
                         UpdateEquipment();
@@ -69,7 +69,7 @@ public class Character : MonoBehaviour
                     else if (EventSystem.current.currentSelectedGameObject.name == "Ranged2" && IsRightType(Inventory.Instance.Contents[draggedItemIndex], Item.ItemType.Gun))
                     {
                         ItemsInWeaponSlots[3] = Inventory.Instance.Contents[draggedItemIndex];
-                        Inventory.Instance.DropItem(Inventory.Instance.Contents[draggedItemIndex]);
+                        Inventory.Instance.Contents.Remove(Inventory.Instance.Contents[draggedItemIndex]);
                         Inventory.Instance.draggedItem.ClearDraggedItem();
 
                         UpdateEquipment();
@@ -172,6 +172,6 @@ public class Character : MonoBehaviour
 
         clone.transform.parent = WeaponHolder;
         clone.transform.localPosition = Vector3.zero;
-        clone.transform.localScale = Vector3.one * 2;
+        clone.transform.localScale = item.EquippedPrefabScale;
     }
 }
