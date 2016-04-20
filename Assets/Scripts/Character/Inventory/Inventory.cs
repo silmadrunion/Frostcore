@@ -3,181 +3,203 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using System;
-[Serializable]
-[AddComponentMenu("Inventory/Inventory")]
+
 public class Inventory : MonoBehaviour
 {
+    /// <summary>
+    /// Instance for quick access
+    /// </summary>
     public static Inventory Instance;
 
-    //This is the central piece of the Inventory System.
-    public List<Transform> Contents; //The content of the Inventory
-
-    /// <summary>
-    /// Non 'Item' objects that can be accesed by the player without opening the 'Inventory'
-    /// </summary>
-    public Transform[] HotbarContents;
-    public RectTransform[] HotbarIcons;
-    
-    public RectTransform InventoryContents;
-    public GameObject ItemRectangle;
-
-    bool DebugMode = false; //If this is turned on the Inventory script will output the base of what it's doing to the Console window.
-
-    private InventoryDisplay playersInvDisplay; //Keep track of the InventoryDisplay script.
-
-    public Transform itemHolderObject; //The object the unactive items are going to be parented to. In most cases this is going to be the Inventory object itself.
-
-    //Handle components and assign the itemHolderObject.
-    void Awake()
+    void Start()
     {
         Instance = this;
 
-        itemHolderObject = gameObject.transform;
-        HotbarContents = new Transform[9];
+        if (Contents == null)
+            Contents = new List<Item>();
 
-        playersInvDisplay = GetComponent<InventoryDisplay>();
-        if (playersInvDisplay == null)
-        {
-            Debug.LogError("No Inventory Display script was found on " + transform.name + " but an Inventory script was.");
-            Debug.LogError("Unless a Inventory Display script is added the Inventory won't show. Add it to the same gameobject as the Inventory for maximum performance");
-        }
+        HotbarContents = new int[9];
+        Helper.Populate<int>(HotbarContents, -1);
+
+        draggedItem = new DraggedItem();
     }
 
-    //Add an item to the inventory.
-    public void AddItem(Transform Item)
+    /// <summary>
+    /// The items held by the player
+    /// </summary>
+    public List<Item> Contents;
+
+    /// <summary>
+    /// The indexes of the items that are accessible from the hotbar
+    /// </summary>
+    public int[] HotbarContents;
+    public RectTransform[] HotbarButtons;
+
+    /// <summary>
+    /// This has a separate class because it is used very often and by many components
+    /// </summary>
+    public class DraggedItem
     {
-        List<Transform> newContents = new List<Transform>(); // Create the array that will temporarily hold our inventory as we transfer it
-        // Grabs the current contents and puts it into the array
-        foreach (Transform i in Contents)
-            // If the transform isn't empty in the old inventory list, add it to the new one
-            if (i != null)
-                newContents.Add(i);
+        public RectTransform itemIcon;
+        public int indexInContents;
+        public bool isAnItemDragged;
 
-        // If it's not in there add it in (regardless of if it stacks or not)
-        if (!newContents.Contains(Item))
-            newContents.Add(Item);
-
-        Contents = newContents;
-
-        if (DebugMode)
+        /// <summary>
+        /// Clones the icon on the itemIcon, adds an Canvas component with overrideSorting and starts the starts a coroutine that updates this clones position
+        /// </summary>
+        /// <param name="index"> The 0-based index of the item we want to drag in ItemIcons list </param>
+        public void DragItem(int index)
         {
-            // Get the amount in use
-            int invInUse = 0;
-            foreach (Transform i in Contents)
-                if (i != null)
-                    invInUse += 1;
-            // Display it
-            Debug.Log(Item.name + " has been added to inventroy");
-            Debug.Log("The Inventory contains " + invInUse + " items");
+            indexInContents = index;
+            isAnItemDragged = true;
+
+            GameObject clone = Instantiate(InventoryDisplay.Instance.ItemIcons[index].GetChild(1).gameObject, Vector3.zero, Quaternion.identity) as GameObject;
+            clone.transform.parent = InventoryDisplay.Instance.InventoryUIReference.transform;
+            clone.AddComponent<Canvas>();
+            clone.GetComponent<Canvas>().overrideSorting = true;
+            clone.GetComponent<Canvas>().sortingOrder = 20;
+            itemIcon = clone.GetComponent<RectTransform>();
+
+            Inventory.Instance.StartCoroutine(UpdateDraggedItemIconPos());
         }
 
-        //Tell the InventoryDisplay to update the list.
-        if (playersInvDisplay != null)
+        /// <summary>
+        /// Destroys the currently dragged itemIcon
+        /// </summary>
+        public void ClearDraggedItem()
         {
-            playersInvDisplay.UpdateInventoryList();
-        }
-    }
+            indexInContents = -1;
+            isAnItemDragged = false;
 
-    //Removed an item from the inventory (IT DOESN'T DROP IT).
-    public void RemoveItem(Transform Item)
-    {
-        List<Transform> newContents = new List<Transform>(Contents);
-        int index = 0;
-        bool shouldend = false;
-        foreach (Transform i in newContents) //Loop through the Items in the Inventory:
-        {
-            if (i == Item) //When a match is found, remove the Item.
-            {
-                newContents.RemoveAt(index);
-                shouldend = true;
-                //No need to continue running through the loop since we found our item.
-            }
-            index++;
-
-            if (shouldend) //Exit the loop
-            {
-                Contents = newContents;
-                if (DebugMode)
-                {
-                    Debug.Log(Item.name + " has been removed from inventroy");
-                }
-                if (playersInvDisplay != null)
-                {
-                    playersInvDisplay.UpdateInventoryList();
-                }
+            if (itemIcon == null)
                 return;
+
+            Destroy(itemIcon.gameObject);
+            itemIcon = null;
+
+            Inventory.Instance.StopCoroutine(UpdateDraggedItemIconPos());
+        }
+
+        /// <summary>
+        /// Sets the dragged item's position to the mouse position, plus an offset
+        /// </summary>
+        /// <returns> null </returns>
+        IEnumerator UpdateDraggedItemIconPos()
+        {
+            for(;;)
+            {
+                if (itemIcon == null)
+                    yield break;
+
+                itemIcon.position = new Vector2(Input.mousePosition.x + 20, Input.mousePosition.y + 20);
+
+                yield return null;
             }
         }
     }
 
-    //Dropping an Item from the Inventory
-    public void DropItem(Item item)
+    public DraggedItem draggedItem;
+
+    /// <summary>
+    /// Places an Item in Contents list.
+    /// </summary>
+    public void PickItem(Item item)
     {
-        gameObject.SendMessage("PlayDropItemSound", SendMessageOptions.DontRequireReceiver); //Play sound
-        bool makeDuplicate = false;
-        if (item.stack == 1) //Drop item
-        {
-            RemoveItem(item.transform);
-        }
-        else //Drop from stack
-        {
-            item.stack -= 1;
-            makeDuplicate = true;
-        }
-
-        item.DropMeFromThePlayer(makeDuplicate); //Calling the drop function + telling it if the object is stacked or not.
-
-        InventoryDisplay.Instance.UpdateInventoryList();
-
-        if (DebugMode)
-        {
-            Debug.Log(item.name + " has been dropped");
-        }
-    }
-
-    public void EquipItem(Transform item, int index)
-    {
-        if (item.GetComponent<Item>().equippedWeaponVersion == null)
+        if (item == null)
             return;
 
-        if (P2D_Controller.Instance.ItemBeingHeld != null)
+        if (item.Count == 0)
         {
-            Destroy(P2D_Controller.Instance.ItemBeingHeld.gameObject);
-            P2D_Controller.Instance.ItemBeingHeld = null;
-
-            if (HotbarContents[P2D_Controller.Instance.IndexOfItemBeingHeld].GetComponent<Image>() != null)
-                HotbarContents[P2D_Controller.Instance.IndexOfItemBeingHeld].GetComponent<Image>().color = Color.white;
+            Destroy(item.gameObject);
+            return;
         }
-        GameObject clone = new GameObject();
-        clone = Instantiate(item.GetComponent<Item>().equippedWeaponVersion.gameObject, Vector3.zero, Quaternion.identity) as GameObject;
-        clone.transform.SetParent(P2D_Controller.Instance.ItemHolderObject, false);
-        clone.SetActive(true);
-        P2D_Controller.Instance.ItemBeingHeld = clone.transform;
 
-        HotbarContents[index].GetComponent<Image>().color = Color.red;
-    }
+        int fittingAmount = Mathf.Clamp((int)((Player.Instance.pStats.MaxCarryWeight - Player.Instance.pStats.CarryWeight) / item.Weight), 0, item.Count);
 
-    public void UseItem(Transform item)
-    {
-        Debug.Log("USE ITEM");
-    }
-
-    //This will tell you everything that is in the inventory.
-    void DebugInfo()
-    {
-        Debug.Log("Inventory Debug - Contents");
-        int items = 0;
-        foreach (Transform i in Contents)
+        // If the item is already in the Contents
+        if (Contents.Find(x => x.Name == item.Name && x.Count < x.MaxStack) != null)
         {
-            items++;
-            // Debug.Log(i.name);
+            int index = Contents.FindIndex(x => x.Name == item.Name && x.Count < x.MaxStack);
+
+            // If it cn fit wholy in one's stack
+            if (fittingAmount + Contents[index].Count <= item.MaxStack)
+            {
+                // Just add it
+                Contents[index].Count += fittingAmount;
+
+                item.Count -= fittingAmount;
+                fittingAmount = 0;
+
+                Destroy(item.gameObject);
+            }
+            else
+            {
+                // Fill the first stack
+
+                var auxCount = Contents[index].Count;
+                Contents[index].Count = Mathf.Clamp(Contents[index].Count + fittingAmount, 0, Contents[index].MaxStack);
+                item.Count = fittingAmount - (Mathf.Clamp(auxCount + fittingAmount, 0, item.MaxStack) - auxCount);
+                fittingAmount = fittingAmount - (Mathf.Clamp(auxCount + fittingAmount, 0, item.MaxStack) - auxCount);
+            }
         }
-        Debug.Log("Inventory contains " + items + " Item(s)");
+        
+        // If there can still fit some of this item
+        if(fittingAmount != 0)
+        {
+            // If it fits wholy
+            if (item.Count == fittingAmount)
+            {
+                // Just add it
+                Contents.Add(item);
+
+                item.gameObject.SetActive(false);
+                item.transform.parent = transform;
+                item.transform.localPosition = Vector3.zero;
+            }
+            else
+            {
+                // Add a clone, and uptade the item's remaining Count
+
+                GameObject clone = Instantiate(item.gameObject) as GameObject;
+                clone.name = item.Name;
+                clone.transform.parent = transform;
+                clone.transform.localPosition = Vector3.zero;
+                clone.SetActive(false);
+
+                clone.GetComponent<Item>().Count = fittingAmount;
+
+                Contents.Add(clone.GetComponent<Item>());
+
+                item.Count -= fittingAmount;
+            }
+        }
+  
+        // If there is nothing left of the item, destroy it
+        if (item.Count == 0)
+            Destroy(item.gameObject);
+
+        InventoryDisplay.Instance.UpdateInventoryList();
     }
 
-    //Drawing an 'S' in the scene view on top of the object the Inventory is attached to stay organized.
-    void OnDrawGizmos()
+    /// <summary>
+    /// Removes an item from Contents list.
+    /// </summary>
+    public void DropItem(Item item)
     {
-        Gizmos.DrawIcon(new Vector3(transform.position.x, transform.position.y + 2.3f, transform.position.z), "InventoryGizmo.png", true);
+        item.gameObject.SetActive(true);
+        item.transform.parent = null;
+        item.GetComponent<Collider2D>().enabled = true;
+        item.gameObject.tag = "ItemIgnoreManeuver";
+        item.transform.GetChild(0).gameObject.tag = "ItemIgnoreManeuver";
+        StartCoroutine(ResetLayerOfItem(item));
+
+        Contents.Remove(item);
+    }
+
+    IEnumerator ResetLayerOfItem(Item item)
+    {
+        yield return new WaitForSeconds(4f);
+        item.gameObject.tag = "Item";
+        item.transform.GetChild(0).gameObject.tag = "Item";
     }
 }
