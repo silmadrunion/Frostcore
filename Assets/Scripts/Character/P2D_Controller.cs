@@ -61,7 +61,7 @@ public class P2D_Controller : MonoBehaviour
             }
             else if (ItemBeingHeld.tag == "Breakable")
             {
-                block = ItemBeingHeld.GetComponent<Item>().itemPlacement;
+                block = ItemBeingHeld.GetComponent<Item>().ItemPlacement;
                 canPlace = true;
                 canBreak = false;
                 P2D_Animator.Instance.HoldGun(false);
@@ -99,10 +99,10 @@ public class P2D_Controller : MonoBehaviour
             if (canPlace)
             {
                 _PlaceBlock.Place(block);
-                Inventory.Instance.HotbarContents[IndexOfItemBeingHeld].GetComponent<Item>().stack--;
-                if (Inventory.Instance.HotbarContents[IndexOfItemBeingHeld].GetComponent<Item>().stack == 0)
+                Inventory.Instance.Contents[Inventory.Instance.HotbarContents[IndexOfItemBeingHeld]].GetComponent<Item>().Count--;
+                if (Inventory.Instance.Contents[Inventory.Instance.HotbarContents[IndexOfItemBeingHeld]].GetComponent<Item>().Count == 0)
                 {
-                    Destroy(Inventory.Instance.HotbarContents[IndexOfItemBeingHeld].gameObject);
+                    Destroy(Inventory.Instance.Contents[Inventory.Instance.HotbarContents[IndexOfItemBeingHeld]].gameObject);
                     block = null;
                     Destroy(ItemBeingHeld.gameObject);
                 }
@@ -155,20 +155,20 @@ public class P2D_Controller : MonoBehaviour
 
             do
             {
-                if (Character.Instance.ItemEquippedNR == 3)
-                    Character.Instance.ItemEquippedNR = 0;
+                if (Character.Instance.WeaponInUseIndex == 3)
+                    Character.Instance.WeaponInUseIndex = 0;
                 else
-                    Character.Instance.ItemEquippedNR++;
+                    Character.Instance.WeaponInUseIndex++;
 
                 tries++;
 
                 if (tries > 4)
                     break;
-            } while (Character.Instance.WeaponSlot[Character.Instance.ItemEquippedNR] == null);
+            } while (Character.Instance.ItemsInWeaponSlots[Character.Instance.WeaponInUseIndex] == null);
             Character.Instance.UpdateEquipment();
         }
-
-        if (InventoryDisplay.displayInventory)
+        /*
+        if (InventoryDisplay.Instance.displayInventory)
             return;
 
         int i = 0;
@@ -185,7 +185,7 @@ public class P2D_Controller : MonoBehaviour
                 }
             }
             i++;
-        }
+        }*/
 	}
 
     void FixedUpdate()
