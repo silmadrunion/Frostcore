@@ -45,6 +45,7 @@ public class Item : MonoBehaviour
     /// The equipped object prefab; to make sure it looks right in-game
     /// </summary>
     public GameObject EquippedPrefab;
+    public Vector3 EquippedPrefabScale;
 
     /// <summary>
     /// If the item is placeble, it must have a placement prefab; to make sure it looks right in-game
